@@ -1,4 +1,5 @@
-﻿using JetBrains.Annotations;
+﻿using System.Runtime.CompilerServices;
+using JetBrains.Annotations;
 
 namespace DiscordBot.Language;
 
@@ -11,12 +12,25 @@ public static class NullExtensions
     /// <param name="name">The name of the member</param>
     [return: System.Diagnostics.CodeAnalysis.NotNull]
     [ContractAnnotation("value:null => halt")]
-    public static TMember ThrowIfNull<TMember>([NoEnumeration] this TMember value, string name)
+    public static TMember ThrowIfNull<TMember>([NoEnumeration] this TMember value, [CallerArgumentExpression("value")] string? name = null)
     {
-        if (value != null) return value;
+        ArgumentNullException.ThrowIfNull(value, name);
+        return value;
+    }
 
-        if (string.IsNullOrEmpty(name)) throw new ArgumentNullException(nameof(name));
+    /// <summary>
+    /// Throws an exception if the string is null or whitespace, otherwise returns the value itself.
+    /// </summary>
+    /// <param name="value">The value to check</param>
+    /// <param name="name">The name of the member</param>
+    [ContractAnnotation("value:null => halt")]
+    public static string ThrowIfNullOrWhitespace(this string value, [CallerArgumentExpression("value")] string? name = null)
+    {
+        if (!string.IsNullOrWhiteSpace(value))
+            return value;
 
-        throw new ArgumentNullException(name);
+        name!.ThrowIfNullOrWhitespace();
+
+        throw new ArgumentOutOfRangeException(name, value, "Value must not be null or whitespace");
     }
 }

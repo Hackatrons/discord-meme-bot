@@ -1,10 +1,11 @@
 ﻿using Discord;
+using Discord.Interactions;
 using Discord.WebSocket;
+using DiscordBot.Commands;
 using DiscordBot.Configuration;
 using DiscordBot.Logging;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
 using Serilog;
 
 namespace DiscordBot;
@@ -16,43 +17,42 @@ internal class Startup
     public Startup()
     {
         var services = new ServiceCollection();
-
         var config = BuildConfig(services);
         _ = BuildLogging(config, services);
         _provider = BuildServices(services);
     }
 
-    public async Task StartAsync()
-    {
-        _ = _provider.GetRequiredService<DiscordSocketClientLogger>();
+    public Task StartAsync() =>
+        _provider
+            .GetRequiredService<Bot>()
+            .StartAsync();
 
-        var client = _provider.GetRequiredService<DiscordSocketClient>();
-        var config = _provider.GetRequiredService<IOptions<DiscordSettings>>();
+    public Task StopAsync() =>
+        _provider
+            .GetRequiredService<Bot>()
+            .StopAsync();
 
-        await client.LoginAsync(TokenType.Bot, config.Value.Token);
-        await client.StartAsync();
-    }
+    static IServiceProvider BuildServices(IServiceCollection services) => services
+        .AddSingleton(new DiscordSocketConfig
+        {
+            LogLevel = LogSeverity.Verbose,
+            GatewayIntents =
+                GatewayIntents.Guilds |
+                GatewayIntents.GuildMessages
+        })
+        .AddSingleton<DiscordSocketClient>()
+        .AddSingleton(new InteractionServiceConfig
+        {
+            LogLevel = LogSeverity.Verbose
+        })
+        .AddSingleton<InteractionService>()
+        .AddSingleton<DiscordLogger>()
+        .AddSingleton<CommandHandler>()
+        .AddSingleton<Bot>()
+        .BuildServiceProvider();
 
-    public async Task StopAsync()
-    {
-        var client = _provider.GetRequiredService<DiscordSocketClient>();
-
-        await client.LogoutAsync();
-        await client.StopAsync();
-        await client.DisposeAsync();
-    }
-
-    static IServiceProvider BuildServices(IServiceCollection services) =>
-        services
-            .AddSingleton(new DiscordSocketClient(new DiscordSocketConfig
-            {
-                LogLevel = LogSeverity.Verbose
-            }))
-            .AddSingleton<DiscordSocketClientLogger>()
-            .BuildServiceProvider();
-
-    static IServiceCollection BuildLogging(IConfiguration configuration, IServiceCollection services) =>
-        services.AddLogging(loggingBuilder =>
+    static IServiceCollection BuildLogging(IConfiguration configuration, IServiceCollection services) => services
+        .AddLogging(loggingBuilder =>
         {
             var serilog = new LoggerConfiguration()
                 .ReadFrom.Configuration(configuration)
