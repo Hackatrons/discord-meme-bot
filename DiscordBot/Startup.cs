@@ -49,6 +49,7 @@ internal class Startup
         .AddSingleton<DiscordLogger>()
         .AddSingleton<CommandHandler>()
         .AddSingleton<Bot>()
+        .AddHttpClient()
         .BuildServiceProvider();
 
     static IServiceCollection BuildLogging(IConfiguration configuration, IServiceCollection services) => services

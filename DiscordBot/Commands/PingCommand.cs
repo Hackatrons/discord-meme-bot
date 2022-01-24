@@ -4,9 +4,6 @@ using JetBrains.Annotations;
 namespace DiscordBot.Commands;
 
 [UsedImplicitly]
-// we'll take care of command registration in the CommandHandler
-// to avoid duplicate commands displaying in discord
-[DontAutoRegister]
 public class PingCommand : InteractionModuleBase<SocketInteractionContext>
 {
     [UsedImplicitly]

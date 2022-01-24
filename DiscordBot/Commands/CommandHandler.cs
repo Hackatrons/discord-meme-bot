@@ -25,7 +25,6 @@ internal class CommandHandler : IDisposable
     public void Initialise()
     {
         _client.Ready += OnReady;
-        _client.GuildAvailable += OnGuildAvailable;
         _client.InteractionCreated += OnInteractionCreated;
         _interactions.SlashCommandExecuted += OnSlashCommandExecuted;
     }
@@ -33,7 +32,6 @@ internal class CommandHandler : IDisposable
     public void Dispose()
     {
         _client.Ready -= OnReady;
-        _client.GuildAvailable -= OnGuildAvailable;
         _client.InteractionCreated -= OnInteractionCreated;
         _interactions.SlashCommandExecuted -= OnSlashCommandExecuted;
     }
@@ -68,19 +66,14 @@ internal class CommandHandler : IDisposable
             await context.Interaction.FollowupAsync(embed: message);
     }
 
-    async Task OnGuildAvailable(SocketGuild arg)
+    async Task OnReady()
     {
 #if DEBUG
-        await _interactions.RegisterCommandsToGuildAsync(arg.Id);
-#endif
-    }
-
-#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
-    // ReSharper disable once MemberCanBeMadeStatic.Local
-    async Task OnReady()
-#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
-    {
-#if !DEBUG
+        foreach (var guild in _client.Guilds)
+        {
+            await _interactions.RegisterCommandsToGuildAsync(guild.Id);
+        }
+#else
         await _interactions.RegisterCommandsGloballyAsync();
 #endif
     }
