@@ -10,6 +10,7 @@ using JetBrains.Annotations;
 namespace DiscordBot.Commands;
 
 [UsedImplicitly]
+// commands must be public classes for discord.net to use them
 public class SearchCommand : InteractionModuleBase<SocketInteractionContext>
 {
     const int SearchResultLimit = 500;

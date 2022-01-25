@@ -2,8 +2,10 @@
 
 namespace DiscordBot.Configuration;
 
-internal class DiscordSettings
+public record DiscordSettings
 {
     [Required]
-    public string? Token { get; set; }
+    public string? Token { get; init; }
+    [Required]
+    public string? InviteLink { get; init; }
 }

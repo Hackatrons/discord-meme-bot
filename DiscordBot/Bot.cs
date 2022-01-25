@@ -43,7 +43,7 @@ internal class Bot : IAsyncDisposable
         _commandHandler.Initialise();
 
         // discover all of the commands in this assembly and load them.
-        await _interactions.AddModulesAsync(typeof(PingCommand).Assembly, _provider);
+        await _interactions.AddModulesAsync(typeof(SearchCommand).Assembly, _provider);
 
         await _client.LoginAsync(TokenType.Bot, _settings.Token);
         await _client.StartAsync();
