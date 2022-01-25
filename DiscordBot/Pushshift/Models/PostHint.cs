@@ -4,13 +4,13 @@ namespace DiscordBot.Pushshift.Models;
 
 public static class PostHint
 {
-    public static readonly IReadOnlyCollection<string> Media = new []
-    {
-        Video, Image
-    };
-
-    public const string Video = "rich:video";
-    public const string Link = "link";
+    /// <summary>
+    /// External video links
+    /// </summary>
+    public const string RichVideo = "rich:video";
+    /// <summary>
+    /// Videos that are hosted by reddit
+    /// </summary>
+    public const string HostedVideo = "hosted:video";
     public const string Image = "image";
-    public const string Self = "self";
 }

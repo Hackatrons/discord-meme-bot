@@ -1,7 +1,10 @@
 ﻿using Discord.Interactions;
+using DiscordBot.Caching;
+using DiscordBot.Filters;
 using DiscordBot.Language;
-using DiscordBot.Numerics;
+using DiscordBot.Models;
 using DiscordBot.Pushshift;
+using DiscordBot.Pushshift.Models;
 using JetBrains.Annotations;
 
 namespace DiscordBot.Commands;
@@ -9,11 +12,21 @@ namespace DiscordBot.Commands;
 [UsedImplicitly]
 public class SearchCommand : InteractionModuleBase<SocketInteractionContext>
 {
-    const int SearchResultLimit = 100;
+    const int SearchResultLimit = 500;
 
+    readonly ResultsCache _cache;
     readonly HttpClient _httpClient;
+    readonly AggregateFilter _filter;
 
-    public SearchCommand(HttpClient client) => _httpClient = client.ThrowIfNull();
+    public SearchCommand(
+        ResultsCache cache,
+        AggregateFilter filter,
+        HttpClient client)
+    {
+        _cache = cache.ThrowIfNull();
+        _httpClient = client.ThrowIfNull();
+        _filter = filter.ThrowIfNull();
+    }
 
     [UsedImplicitly]
     [SlashCommand("search", "Perform a search for anything.")]
@@ -23,14 +36,30 @@ public class SearchCommand : InteractionModuleBase<SocketInteractionContext>
         // but we can defer the response and have up to 15mins to provide a follow up response
         await DeferAsync();
 
-        var results = (await new PushshiftQuery()
+        var results = _cache.GetOrAdd(
+            Context.Channel.Id,
+            nameof(SearchCommand),
+            query,
+            () => PerformSearch(query));
+
+        if (!await results.MoveNextAsync())
+            await FollowupAsync("No more results");
+        else
+            await FollowupAsync(results.Current.Url);
+    }
+
+    async IAsyncEnumerator<SearchResult> PerformSearch(string query)
+    {
+        var initialResults = (await new PushshiftQuery()
             .Search(query)
             .Limit(SearchResultLimit)
+            .Fields<PushshiftResult>()
             .Execute(_httpClient))
-            .ToList();
+            .Select(SearchResult.FromPushshift);
+        
+        var filtered = _filter.Filter(initialResults.ToAsyncEnumerable());
 
-        var randomResult = results[ThreadSafeRandom.Random.Next(0, results.Count -1)];
-
-        await FollowupAsync(randomResult.Url);
+        await foreach (var item in filtered)
+            yield return item;
     }
 }

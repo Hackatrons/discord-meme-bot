@@ -1,9 +1,10 @@
 ﻿using DiscordBot.Language;
 using DiscordBot.Pushshift.Models;
-using O9d.Json.Formatting;
 using System.Collections.Specialized;
 using System.Net;
+using System.Reflection;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace DiscordBot.Pushshift;
 
@@ -12,12 +13,8 @@ public class PushshiftQuery
     // https://github.com/pushshift/api
     const string BaseUrl = "https://api.pushshift.io/reddit/search/submission/";
 
-    static readonly JsonSerializerOptions SerializerOptions = new()
-    {
-        PropertyNamingPolicy = new JsonSnakeCaseNamingPolicy()
-    };
-
     readonly List<string> _subreddits = new();
+    readonly List<string> _fields = new();
     int? _limit;
     string? _query;
     string? _title;
@@ -27,16 +24,30 @@ public class PushshiftQuery
     ScoreFilterType? _scoreFilterType;
     SortDirection? _sortDirection;
 
-    public PushshiftQuery Subreddits(IEnumerable<string> subreddits)
+    public PushshiftQuery Subreddits(params string[] subreddits)
     {
         _subreddits.AddRange(subreddits.ThrowIfNull());
         return this;
     }
 
-    public PushshiftQuery Subreddits(params string[] subreddits)
+    public PushshiftQuery Fields(IEnumerable<string> fields)
     {
-        _subreddits.AddRange(subreddits.ThrowIfNull());
+        _fields.AddRange(fields.ThrowIfNull());
         return this;
+    }
+
+    public PushshiftQuery Fields<T>()
+    {
+        var fields = typeof(T)
+            .GetProperties()
+            .Select(property => new
+            {
+                property,
+                jsonAttribute = property.GetCustomAttributes<JsonPropertyNameAttribute>().SingleOrDefault()
+            })
+            .Select(x => x.jsonAttribute?.Name ?? x.property.Name);
+
+        return Fields(fields);
     }
 
     public PushshiftQuery Limit(int limit)
@@ -130,6 +141,8 @@ public class PushshiftQuery
 
         if (_limit.HasValue) parameters.Add("size", _limit.Value.ToString());
 
+        if (_fields.Any()) parameters.Add("fields", string.Join(",", _fields));
+
         builder.Query = string.Join("&", parameters.AllKeys.Select(x => x + "=" + parameters[x]));
 
         // don't add port 443 into the return string
@@ -138,7 +151,7 @@ public class PushshiftQuery
         return builder.Uri;
     }
 
-    public async Task<IEnumerable<Result>> Execute(HttpClient client, CancellationToken cancellationToken = new())
+    public async Task<IEnumerable<PushshiftResult>> Execute(HttpClient client, CancellationToken cancellationToken = new())
     {
         var url = ToString();
         var stream = await client.GetStreamAsync(url, cancellationToken);
@@ -146,8 +159,8 @@ public class PushshiftQuery
         var items = json.RootElement.GetProperty("data").EnumerateArray();
 
         return items
-            .Select(x => x.Deserialize<Result?>(SerializerOptions))
-            .Where(x => x != null)
+            .Select(x => x.Deserialize<PushshiftResult?>())
+            .Where(x => x != null && !string.IsNullOrEmpty(x.Url))
             .Select(x => x!);
     }
 }

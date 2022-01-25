@@ -1,4 +1,5 @@
 using DiscordBot.Pushshift;
+using DiscordBot.Pushshift.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace DiscordBot.Test;
@@ -203,6 +204,16 @@ public class PushshiftUrlTest
                 .FilterScore(100, ScoreFilterType.LessThanOrEqualTo)
                 .Sort(SortType.Score)
                 .Limit(100)
+                .ToString());
+    }
+
+    [TestMethod]
+    public void QueryWithFieldsReturnsCorrectUrl()
+    {
+        Assert.AreEqual("https://api.pushshift.io/reddit/search/submission/?q=asdf&fields=url,post_hint",
+            new PushshiftQuery()
+                .Search("asdf")
+                .Fields<PushshiftResult>()
                 .ToString());
     }
 }

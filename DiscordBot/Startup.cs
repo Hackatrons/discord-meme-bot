@@ -1,8 +1,10 @@
 ﻿using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
+using DiscordBot.Caching;
 using DiscordBot.Commands;
 using DiscordBot.Configuration;
+using DiscordBot.Filters;
 using DiscordBot.Logging;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -48,7 +50,9 @@ internal class Startup
         .AddSingleton<InteractionService>()
         .AddSingleton<DiscordLogger>()
         .AddSingleton<CommandHandler>()
+        .AddSingleton<ResultsCache>()
         .AddSingleton<Bot>()
+        .AddResultsFilters()
         .AddHttpClient()
         .BuildServiceProvider();
 
