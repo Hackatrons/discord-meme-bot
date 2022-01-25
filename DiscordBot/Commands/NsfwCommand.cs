@@ -8,20 +8,21 @@ namespace DiscordBot.Commands;
 
 [UsedImplicitly]
 // commands must be public classes for discord.net to use them
-public class SearchCommand : BaseSearchCommand
+public class NsfwCommand : BaseSearchCommand
 {
-    public SearchCommand(
+    public NsfwCommand(
         ResultsCache cache,
         AggregateFilter filter,
         HttpClient client) : base(cache, filter, client) { }
 
     [UsedImplicitly]
-    [SlashCommand("search", "Search for anything (can include both sfw and nsfw results).")]
+    [SlashCommand("nsfw", "Search for only nsfw results.")]
     public Task Execute(string query) => Search(query);
 
     protected override PushshiftQuery BuildBaseQuery(string query)
     {
         return new PushshiftQuery()
-            .Search(query);
+            .Search(query)
+            .Nsfw(true);
     }
 }

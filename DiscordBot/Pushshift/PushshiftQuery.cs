@@ -151,6 +151,26 @@ public class PushshiftQuery
         return builder.Uri;
     }
 
+    public PushshiftQuery Clone()
+    {
+        var cloned = new PushshiftQuery
+        {
+            _limit = _limit,
+            _nsfw = _nsfw,
+            _sort = _sort,
+            _scoreFilter = _scoreFilter,
+            _title = _title,
+            _query = _query,
+            _sortDirection = _sortDirection,
+            _scoreFilterType = _scoreFilterType,
+        };
+
+        cloned._fields.AddRange(_fields);
+        cloned._subreddits.AddRange(_subreddits);
+
+        return cloned;
+    }
+
     public async Task<IEnumerable<PushshiftResult>> Execute(HttpClient client, CancellationToken cancellationToken = new())
     {
         var url = ToString();
