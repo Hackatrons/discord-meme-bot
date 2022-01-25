@@ -9,13 +9,16 @@ public class AggregateFilter : IResultsFilter
     readonly DuplicateFilter _duplicateFilter;
     readonly EmbeddableMediaFilter _embeddableMediaFilter;
     readonly UrlCheckFilter _urlExistsFilter;
+    readonly WeightedRandomiserFilter _weightedRandomiserFilter;
 
     public AggregateFilter(
         DomainBlacklistFilter domainBlacklistFilter,
         DuplicateFilter duplicateFilter,
         EmbeddableMediaFilter embeddableMediaFilter,
-        UrlCheckFilter urlExistsFilter)
+        UrlCheckFilter urlExistsFilter,
+        WeightedRandomiserFilter weightedRandomiserFilter)
     {
+        _weightedRandomiserFilter = weightedRandomiserFilter.ThrowIfNull();
         _domainBlacklistFilter = domainBlacklistFilter.ThrowIfNull();
         _duplicateFilter = duplicateFilter.ThrowIfNull();
         _embeddableMediaFilter = embeddableMediaFilter.ThrowIfNull();
@@ -32,6 +35,7 @@ public class AggregateFilter : IResultsFilter
             _domainBlacklistFilter,
             _duplicateFilter,
             _embeddableMediaFilter,
+            _weightedRandomiserFilter,
             _urlExistsFilter
         };
 

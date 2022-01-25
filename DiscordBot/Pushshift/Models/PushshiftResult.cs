@@ -4,10 +4,16 @@ using System.Text.Json.Serialization;
 
 namespace DiscordBot.Pushshift.Models;
 
-public class PushshiftResult
+public record PushshiftResult
 {
     [JsonPropertyName("url")]
-    public string? Url { get; set; }
+    public string? Url { get; init; }
     [JsonPropertyName("post_hint")]
-    public string? PostHint { get; set; }
+    public string? PostHint { get; init; }
+    [JsonPropertyName("num_comments")]
+    public int? NumComments { get; init; }
+    [JsonPropertyName("created_utc")]
+    public long? CreatedUtc { get; init; }
+    [JsonPropertyName("score")]
+    public int? Score { get; set; }
 }

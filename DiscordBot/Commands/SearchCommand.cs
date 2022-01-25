@@ -13,7 +13,7 @@ namespace DiscordBot.Commands;
 // commands must be public classes for discord.net to use them
 public class SearchCommand : InteractionModuleBase<SocketInteractionContext>
 {
-    const int SearchResultLimit = 500;
+    const int SearchResultLimit = 200;
 
     readonly ResultsCache _cache;
     readonly HttpClient _httpClient;
@@ -51,14 +51,33 @@ public class SearchCommand : InteractionModuleBase<SocketInteractionContext>
 
     async IAsyncEnumerator<SearchResult> PerformSearch(string query)
     {
-        var initialResults = (await new PushshiftQuery()
+        // mix 2 search results in together:
+        // 1. ordered by highest score
+        // 2. ordered by most recent
+        // I think this is a good mixture of results to include
+        var mostRecentTask = new PushshiftQuery()
             .Search(query)
             .Limit(SearchResultLimit)
+            .Sort(SortType.CreatedDate, SortDirection.Descending)
             .Fields<PushshiftResult>()
-            .Execute(_httpClient))
+            .Execute(_httpClient);
+
+        var highestScoreTask = new PushshiftQuery()
+            .Search(query)
+            .Limit(SearchResultLimit)
+            .Sort(SortType.Score, SortDirection.Descending)
+            .Fields<PushshiftResult>()
+            .Execute(_httpClient);
+
+        await Task.WhenAll(mostRecentTask, highestScoreTask);
+
+        var mostRecent = await mostRecentTask;
+        var highestScore = await highestScoreTask;
+        var combined = mostRecent
+            .UnionBy(highestScore, x => x.Url)
             .Select(SearchResult.FromPushshift);
-        
-        var filtered = _filter.Filter(initialResults.ToAsyncEnumerable());
+
+        var filtered = _filter.Filter(combined.ToAsyncEnumerable());
 
         await foreach (var item in filtered)
             yield return item;
