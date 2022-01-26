@@ -1,8 +1,15 @@
 ﻿using DiscordBot;
 
-var startup = new Startup();
-await startup.StartAsync();
+try
+{
+    var startup = new Startup();
+    await startup.StartAsync();
 
-Console.ReadLine();
+    Console.ReadLine();
 
-await startup.StopAsync();
+    await startup.StopAsync();
+}
+catch (Exception ex)
+{
+    Console.WriteLine(ex.ToString());
+}
