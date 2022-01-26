@@ -3,6 +3,7 @@ using Discord.Interactions;
 using Discord.WebSocket;
 using DiscordBot.Configuration;
 using DiscordBot.Language;
+using Microsoft.Extensions.Options;
 
 namespace DiscordBot.Commands;
 
@@ -11,12 +12,15 @@ internal class CommandHandler : IDisposable
     readonly DiscordSocketClient _client;
     readonly InteractionService _interactions;
     readonly IServiceProvider _provider;
+    readonly TestingSettings _testingSettings;
 
     public CommandHandler(
         DiscordSocketClient client,
         InteractionService interactions,
-        IServiceProvider serviceProvider)
+        IServiceProvider serviceProvider,
+        IOptions<TestingSettings> testingSettings)
     {
+        _testingSettings = testingSettings.Value;
         _client = client.ThrowIfNull();
         _interactions = interactions.ThrowIfNull();
         _provider = serviceProvider.ThrowIfNull();
@@ -69,9 +73,10 @@ internal class CommandHandler : IDisposable
     async Task OnReady()
     {
 #if DEBUG
-        foreach (var guild in _client.Guilds)
+        if (_testingSettings.TestServerId != null &&
+            _client.Guilds.Any(x => x.Id == _testingSettings.TestServerId))
         {
-            await _interactions.RegisterCommandsToGuildAsync(guild.Id);
+            await _interactions.RegisterCommandsToGuildAsync(_testingSettings.TestServerId.Value);
         }
 #else
         await _interactions.RegisterCommandsGloballyAsync();

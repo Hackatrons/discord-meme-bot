@@ -82,6 +82,11 @@ internal class Startup
             .Bind(config.GetRequiredSection(Config.SectionName<DiscordSettings>()))
             .ValidateDataAnnotations();
 
+        services
+            .AddOptions<TestingSettings>()
+            .Bind(config.GetRequiredSection(Config.SectionName<TestingSettings>()))
+            .ValidateDataAnnotations();
+
         return config;
     }
 }
