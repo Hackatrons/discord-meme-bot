@@ -3,18 +3,28 @@ using DiscordBot;
 
 try
 {
-    var endSignal = new ManualResetEventSlim();
-    AssemblyLoadContext.Default.Unloading += _ =>
-    {
-        endSignal.Set();
-    };
+    var runToken = new CancellationTokenSource();
+
+    AssemblyLoadContext.Default.Unloading += _ => runToken.Cancel();
+    AppDomain.CurrentDomain.ProcessExit += (_, _) => runToken.Cancel();
+    Console.CancelKeyPress += (_, _) => runToken.Cancel();
 
     var startup = new Startup();
+
+    // start the app
     await startup.StartAsync();
 
-    Console.ReadLine();
+    try
+    {
+        // wait for a kill signal
+        await Task.Delay(Timeout.Infinite, runToken.Token);
+    }
+    catch (TaskCanceledException) { }
 
+    // stop the app
     await startup.StopAsync();
+
+    Environment.Exit(0);
 }
 catch (Exception ex)
 {
