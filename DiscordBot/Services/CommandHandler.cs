@@ -5,7 +5,7 @@ using DiscordBot.Configuration;
 using DiscordBot.Language;
 using Microsoft.Extensions.Options;
 
-namespace DiscordBot.Commands;
+namespace DiscordBot.Services;
 
 internal class CommandHandler : IDisposable
 {

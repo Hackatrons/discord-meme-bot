@@ -2,10 +2,10 @@
 using Discord.Interactions;
 using Discord.WebSocket;
 using DiscordBot.Caching;
-using DiscordBot.Commands;
 using DiscordBot.Configuration;
 using DiscordBot.Filters;
 using DiscordBot.Logging;
+using DiscordBot.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
@@ -40,7 +40,8 @@ internal class Startup
             LogLevel = LogSeverity.Verbose,
             GatewayIntents =
                 GatewayIntents.Guilds |
-                GatewayIntents.GuildMessages
+                GatewayIntents.GuildMessages |
+                GatewayIntents.GuildMessageReactions
         })
         .AddSingleton<DiscordSocketClient>()
         .AddSingleton(new InteractionServiceConfig
@@ -50,7 +51,9 @@ internal class Startup
         .AddSingleton<InteractionService>()
         .AddSingleton<DiscordLogger>()
         .AddSingleton<CommandHandler>()
+        .AddSingleton<RepeatCommandHandler>()
         .AddSingleton<ResultsCache>()
+        .AddSingleton<RepeatCommandCache>()
         .AddSingleton<Bot>()
         .AddResultsFilters()
         .AddHttpClient()

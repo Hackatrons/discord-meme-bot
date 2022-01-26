@@ -1,9 +1,7 @@
-﻿using DiscordBot.Collections;
-using DiscordBot.Models;
+﻿using DiscordBot.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Linq;
-using System.Threading.Tasks;
 using DiscordBot.Ranking;
 
 namespace DiscordBot.Test

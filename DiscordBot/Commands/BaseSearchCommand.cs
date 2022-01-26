@@ -1,10 +1,12 @@
-﻿using Discord.Interactions;
+﻿using Discord;
+using Discord.Interactions;
 using DiscordBot.Caching;
 using DiscordBot.Filters;
 using DiscordBot.Language;
 using DiscordBot.Models;
 using DiscordBot.Pushshift;
 using DiscordBot.Pushshift.Models;
+using DiscordBot.Reactions;
 
 namespace DiscordBot.Commands;
 
@@ -13,7 +15,15 @@ public abstract class BaseSearchCommand : InteractionModuleBase<SocketInteractio
 {
     const int SearchResultLimit = 200;
 
+    static readonly IEmote[] ResultEmotes =
+    {
+        Emotes.ThumbsUp,
+        Emotes.ThumbsDown,
+        Emotes.Repeat
+    };
+
     readonly ResultsCache _cache;
+    readonly RepeatCommandCache _repeatCommandHandler;
     readonly IHttpClientFactory _httpClientFactory;
     readonly AggregateFilter _filter;
     readonly string _typeName;
@@ -21,11 +31,13 @@ public abstract class BaseSearchCommand : InteractionModuleBase<SocketInteractio
     protected BaseSearchCommand(
         ResultsCache cache,
         AggregateFilter filter,
-        IHttpClientFactory httpClientFactory)
+        IHttpClientFactory httpClientFactory,
+        RepeatCommandCache repeatCommandHandler)
     {
         _cache = cache.ThrowIfNull();
-        _httpClientFactory = httpClientFactory.ThrowIfNull();
         _filter = filter.ThrowIfNull();
+        _httpClientFactory = httpClientFactory.ThrowIfNull();
+        _repeatCommandHandler = repeatCommandHandler.ThrowIfNull();
         _typeName = GetType().Name;
     }
 
@@ -37,18 +49,15 @@ public abstract class BaseSearchCommand : InteractionModuleBase<SocketInteractio
         // but we can defer the response and have up to 15mins to provide a follow up response
         await DeferAsync();
 
-        var psQuery = BuildBaseQuery(query);
+        var result = await GetNextResult(query);
+        if (result == null)
+        {
+            await FollowupAsync("No results.");
+            return;
+        }
 
-        var results = _cache.GetOrAdd(
-            Context.Channel.Id,
-            _typeName,
-            query,
-            () => Search(psQuery));
-
-        if (!await results.MoveNextAsync())
-            await FollowupAsync("No more results");
-        else
-            await FollowupAsync(results.Current.Url);
+        var message = await FollowupAsync(result.Url);
+        await AddReactionsAndWatch(message, query);
     }
 
     async IAsyncEnumerator<SearchResult> Search(PushshiftQuery query)
@@ -83,8 +92,6 @@ public abstract class BaseSearchCommand : InteractionModuleBase<SocketInteractio
 
         await Task.WhenAll(mostRecentTask, highestScoreTask);
 
-        httpClient.Dispose();
-
         var mostRecent = await mostRecentTask;
         var highestScore = await highestScoreTask;
         var combined = mostRecent
@@ -92,5 +99,41 @@ public abstract class BaseSearchCommand : InteractionModuleBase<SocketInteractio
             .Select(SearchResult.FromPushshift);
 
         return combined;
+    }
+
+    async Task<SearchResult?> GetNextResult(string query)
+    {
+        var psQuery = BuildBaseQuery(query);
+
+        var results = _cache.GetOrAdd(
+            Context.Channel.Id,
+            _typeName,
+            query,
+            () => Search(psQuery));
+
+        if (!await results.MoveNextAsync())
+            return null;
+
+        return results.Current;
+    }
+
+    async Task AddReactionsAndWatch(IUserMessage message, string query)
+    {
+        _repeatCommandHandler.Add(message.Id, () => RepeatCommand(query));
+        await message.AddReactionsAsync(ResultEmotes);
+    }
+
+    async Task RepeatCommand(string query)
+    {
+        using var state = Context.Channel.EnterTypingState();
+        var result = await GetNextResult(query);
+        if (result == null)
+        {
+            await ReplyAsync("No results.");
+            return;
+        }
+
+        var message = await ReplyAsync(result.Url);
+        await AddReactionsAndWatch(message, query);
     }
 }

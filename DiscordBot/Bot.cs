@@ -5,6 +5,7 @@ using DiscordBot.Commands;
 using DiscordBot.Configuration;
 using DiscordBot.Language;
 using DiscordBot.Logging;
+using DiscordBot.Services;
 using Microsoft.Extensions.Options;
 
 namespace DiscordBot;
@@ -13,6 +14,7 @@ internal class Bot : IAsyncDisposable
 {
     readonly DiscordSocketClient _client;
     readonly CommandHandler _commandHandler;
+    readonly RepeatCommandHandler _emoteHandler;
     readonly InteractionService _interactions;
     readonly DiscordLogger _discordLogger;
     readonly DiscordSettings _settings;
@@ -25,6 +27,7 @@ internal class Bot : IAsyncDisposable
         CommandHandler commandHandler,
         InteractionService interactionService,
         DiscordLogger discordLogger,
+        RepeatCommandHandler emoteHandler,
         IOptions<DiscordSettings> discordSettings)
     {
         _provider = serviceProvider.ThrowIfNull();
@@ -33,6 +36,7 @@ internal class Bot : IAsyncDisposable
         _interactions = interactionService.ThrowIfNull();
         _discordLogger = discordLogger.ThrowIfNull();
         _settings = discordSettings.ThrowIfNull().Value.ThrowIfNull();
+        _emoteHandler = emoteHandler.ThrowIfNull();
     }
 
     public async Task StartAsync()
@@ -41,6 +45,7 @@ internal class Bot : IAsyncDisposable
 
         _discordLogger.Initialise();
         _commandHandler.Initialise();
+        _emoteHandler.Initialise();
 
         // discover all of the commands in this assembly and load them.
         await _interactions.AddModulesAsync(typeof(SearchCommand).Assembly, _provider);
@@ -52,6 +57,7 @@ internal class Bot : IAsyncDisposable
     public async Task StopAsync()
     {
         _commandHandler.Dispose();
+        _emoteHandler.Dispose();
 
         await _client.LogoutAsync();
         await _client.StopAsync();
