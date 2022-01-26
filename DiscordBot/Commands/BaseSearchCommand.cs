@@ -14,17 +14,17 @@ public abstract class BaseSearchCommand : InteractionModuleBase<SocketInteractio
     const int SearchResultLimit = 200;
 
     readonly ResultsCache _cache;
-    readonly HttpClient _httpClient;
+    readonly IHttpClientFactory _httpClientFactory;
     readonly AggregateFilter _filter;
     readonly string _typeName;
 
     protected BaseSearchCommand(
         ResultsCache cache,
         AggregateFilter filter,
-        HttpClient client)
+        IHttpClientFactory httpClientFactory)
     {
         _cache = cache.ThrowIfNull();
-        _httpClient = client.ThrowIfNull();
+        _httpClientFactory = httpClientFactory.ThrowIfNull();
         _filter = filter.ThrowIfNull();
         _typeName = GetType().Name;
     }
@@ -43,7 +43,7 @@ public abstract class BaseSearchCommand : InteractionModuleBase<SocketInteractio
             Context.Channel.Id,
             _typeName,
             query,
-            () => PerformSearch(psQuery));
+            () => Search(psQuery));
 
         if (!await results.MoveNextAsync())
             await FollowupAsync("No more results");
@@ -51,8 +51,18 @@ public abstract class BaseSearchCommand : InteractionModuleBase<SocketInteractio
             await FollowupAsync(results.Current.Url);
     }
 
-    async IAsyncEnumerator<SearchResult> PerformSearch(PushshiftQuery baseQuery)
+    async IAsyncEnumerator<SearchResult> Search(PushshiftQuery query)
     {
+        var results = await PerformSearch(query);
+        var filtered = _filter.Filter(results.ToAsyncEnumerable());
+
+        await foreach (var item in filtered)
+            yield return item;
+    }
+
+    async Task<IEnumerable<SearchResult>> PerformSearch(PushshiftQuery baseQuery)
+    {
+        using var httpClient = _httpClientFactory.CreateClient();
         // mix 2 search results in together:
         // 1. ordered by highest score
         // 2. ordered by most recent
@@ -62,16 +72,18 @@ public abstract class BaseSearchCommand : InteractionModuleBase<SocketInteractio
             .Limit(SearchResultLimit)
             .Sort(SortType.CreatedDate, SortDirection.Descending)
             .Fields<PushshiftResult>()
-            .Execute(_httpClient);
+            .Execute(httpClient);
 
         var highestScoreTask = baseQuery
             .Clone()
             .Limit(SearchResultLimit)
             .Sort(SortType.Score, SortDirection.Descending)
             .Fields<PushshiftResult>()
-            .Execute(_httpClient);
+            .Execute(httpClient);
 
         await Task.WhenAll(mostRecentTask, highestScoreTask);
+
+        httpClient.Dispose();
 
         var mostRecent = await mostRecentTask;
         var highestScore = await highestScoreTask;
@@ -79,9 +91,6 @@ public abstract class BaseSearchCommand : InteractionModuleBase<SocketInteractio
             .UnionBy(highestScore, x => x.Url)
             .Select(SearchResult.FromPushshift);
 
-        var filtered = _filter.Filter(combined.ToAsyncEnumerable());
-
-        await foreach (var item in filtered)
-            yield return item;
+        return combined;
     }
 }

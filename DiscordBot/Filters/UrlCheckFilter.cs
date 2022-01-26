@@ -5,9 +5,12 @@ namespace DiscordBot.Filters;
 
 public class UrlCheckFilter : IResultsFilter
 {
-    readonly HttpClient _httpClient;
+    readonly IHttpClientFactory _httpClientFactory;
 
-    public UrlCheckFilter(HttpClient httpClient) => _httpClient = httpClient.ThrowIfNull();
+    // inject a factory instead of a HttpClient as the lifespan of a HttpClient in this class is short and sporadic
+    // and this class is a singleton
+    // so we don't want to hold a reference to a lingering HttpClient forever
+    public UrlCheckFilter(IHttpClientFactory httpClientFactory) => _httpClientFactory = httpClientFactory.ThrowIfNull();
 
     public IAsyncEnumerable<SearchResult> Filter(IAsyncEnumerable<SearchResult> input) =>
         input
@@ -30,7 +33,8 @@ public class UrlCheckFilter : IResultsFilter
             return (false, null);
 
         var request = new HttpRequestMessage(HttpMethod.Head, uri);
-        var response = await _httpClient.SendAsync(request);
+        using var client = _httpClientFactory.CreateClient();
+        var response = await client.SendAsync(request);
 
         return (response.IsSuccessStatusCode, response.Headers.ETag?.Tag);
     }

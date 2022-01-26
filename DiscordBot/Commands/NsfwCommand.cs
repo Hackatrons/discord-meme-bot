@@ -13,7 +13,7 @@ public class NsfwCommand : BaseSearchCommand
     public NsfwCommand(
         ResultsCache cache,
         AggregateFilter filter,
-        HttpClient client) : base(cache, filter, client) { }
+        IHttpClientFactory httpClientFactory) : base(cache, filter, httpClientFactory) { }
 
     [UsedImplicitly]
     [SlashCommand("nsfw", "Search for only nsfw results.")]

@@ -13,7 +13,7 @@ public class SfwCommand : BaseSearchCommand
     public SfwCommand(
         ResultsCache cache,
         AggregateFilter filter,
-        HttpClient client) : base(cache, filter, client) { }
+        IHttpClientFactory httpClientFactory) : base(cache, filter, httpClientFactory) { }
 
     [UsedImplicitly]
     [SlashCommand("sfw", "Search for only sfw results.")]

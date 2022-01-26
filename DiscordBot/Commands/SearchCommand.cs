@@ -13,7 +13,7 @@ public class SearchCommand : BaseSearchCommand
     public SearchCommand(
         ResultsCache cache,
         AggregateFilter filter,
-        HttpClient client) : base(cache, filter, client) { }
+        IHttpClientFactory httpClientFactory) : base(cache, filter, httpClientFactory) { }
 
     [UsedImplicitly]
     [SlashCommand("search", "Search for anything (can include both sfw and nsfw results).")]
