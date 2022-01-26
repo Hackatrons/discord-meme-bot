@@ -74,6 +74,7 @@ internal class Startup
             .SetBasePath(AppContext.BaseDirectory)
             .AddJsonFile("appsettings.json", false, true)
             .AddUserSecrets<Startup>()
+            .AddEnvironmentVariables()
             .Build();
 
         services

@@ -1,0 +1,38 @@
+image: mcr.microsoft.com/dotnet/sdk:6.0
+
+variables:
+  # Cannot connect to the Docker daemon at tcp://docker:2375
+  # https://gitlab.com/gitlab-org/gitlab-foss/issues/64959
+  DOCKER_TLS_CERTDIR: ""
+
+stages:
+    - build
+    - test
+    - build-docker
+
+before_script:
+    - "dotnet restore"
+
+build:
+    stage: build
+    script:
+        - "dotnet build"
+
+test:
+    stage: test
+    script:
+        - "dotnet test"
+
+build-docker:
+  only:
+    - master
+  stage: build-docker
+  image: docker:stable
+  services:
+    - docker:stable-dind
+  before_script:
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+  script:
+    - cd DiscordBot/
+    - docker build -t registry.gitlab.com/danielhack/discord-meme-bot . -f ./Dockerfile
+    - docker push registry.gitlab.com/danielhack/discord-meme-bot
