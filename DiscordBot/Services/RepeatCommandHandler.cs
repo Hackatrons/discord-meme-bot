@@ -45,7 +45,10 @@ internal class RepeatCommandHandler : IDisposable
             return;
 
         if (!_repeatCommandHandler.TryGet(cachedMessage.Id, out var repeatCommand))
+        {
             _logger.LogWarning("Missing repeat command handler for message {id}", cachedMessage.Id);
+            return;
+        }
 
         await repeatCommand!();
     }

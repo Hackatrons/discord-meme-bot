@@ -10,5 +10,5 @@ internal static class DependencyInjectionExtensions
         .AddSingleton<EmbeddableMediaFilter>()
         .AddSingleton<UrlCheckFilter>()
         .AddSingleton<AggregateFilter>()
-        .AddSingleton<WeightedRandomiserFilter>();
+        .AddSingleton<RandomiserFilter>();
 }
