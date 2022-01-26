@@ -73,7 +73,7 @@ internal class Startup
         var config = new ConfigurationBuilder()
             .SetBasePath(AppContext.BaseDirectory)
             .AddJsonFile("appsettings.json", false, true)
-            .AddUserSecrets<Startup>()
+            .AddUserSecrets<Startup>(true, true)
             .AddEnvironmentVariables()
             .Build();
 
