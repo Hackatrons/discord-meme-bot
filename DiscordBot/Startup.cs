@@ -52,6 +52,7 @@ internal class Startup
         .AddSingleton<DiscordLogger>()
         .AddSingleton<CommandHandler>()
         .AddSingleton<RepeatCommandHandler>()
+        .AddSingleton<DeleteCommandHandler>()
         .AddSingleton<ResultsCache>()
         .AddSingleton<RepeatCommandCache>()
         .AddSingleton<Bot>()

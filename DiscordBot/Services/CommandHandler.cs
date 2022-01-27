@@ -3,6 +3,7 @@ using Discord.Interactions;
 using Discord.WebSocket;
 using DiscordBot.Configuration;
 using DiscordBot.Language;
+using DiscordBot.Messaging;
 using Microsoft.Extensions.Options;
 
 namespace DiscordBot.Services;
@@ -48,21 +49,14 @@ internal class CommandHandler : IDisposable
 
     static async Task RespondError(IInteractionContext context, IResult error)
     {
-        var message = new EmbedBuilder()
-            .WithColor(BotColours.Error)
-            .AddField(x =>
-            {
-                x.Name = error.Error switch
-                {
-                    InteractionCommandError.BadArgs
-                        or InteractionCommandError.ParseFailed
-                        or InteractionCommandError.ConvertFailed => "Invalid Arguments",
-                    InteractionCommandError.UnknownCommand => "Unknown Command",
-                    _ => "Error"
-                };
-                x.Value = error.ErrorReason ?? "An unknown error has occurred.";
-            })
-            .Build();
+        var message = BotMessage.Error(error.Error switch
+        {
+            InteractionCommandError.BadArgs
+                or InteractionCommandError.ParseFailed
+                or InteractionCommandError.ConvertFailed => "Invalid Arguments",
+            InteractionCommandError.UnknownCommand => "Unknown Command",
+            _ => "Error"
+        }, error.ErrorReason ?? "An unknown error has occurred.");
 
         if (!context.Interaction.HasResponded)
             await context.Interaction.RespondAsync(embed: message);

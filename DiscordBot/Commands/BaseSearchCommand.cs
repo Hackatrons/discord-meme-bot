@@ -17,6 +17,7 @@ public abstract class BaseSearchCommand : InteractionModuleBase<SocketInteractio
 
     static readonly IEmote[] ResultEmotes =
     {
+        Emotes.Delete,
         Emotes.ThumbsUp,
         Emotes.ThumbsDown,
         Emotes.Repeat

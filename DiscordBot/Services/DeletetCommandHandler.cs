@@ -1,26 +1,21 @@
 ﻿using Discord;
 using Discord.WebSocket;
-using DiscordBot.Caching;
 using DiscordBot.Language;
-using DiscordBot.Messaging;
 using DiscordBot.Reactions;
 using Microsoft.Extensions.Logging;
 
 namespace DiscordBot.Services;
 
-internal class RepeatCommandHandler : IDisposable
+internal class DeleteCommandHandler : IDisposable
 {
     readonly ILogger _logger;
     readonly DiscordSocketClient _client;
-    readonly RepeatCommandCache _repeatCommandHandler;
 
-    public RepeatCommandHandler(
+    public DeleteCommandHandler(
         DiscordSocketClient client,
-        RepeatCommandCache repeatCommandHandler,
         ILogger<RepeatCommandHandler> logger)
     {
         _client = client.ThrowIfNull();
-        _repeatCommandHandler = repeatCommandHandler.ThrowIfNull();
         _logger = logger.ThrowIfNull();
     }
     public void Initialise()
@@ -42,21 +37,19 @@ internal class RepeatCommandHandler : IDisposable
         if (reaction.UserId == _client.CurrentUser.Id)
             return;
 
-        if (!Emotes.Repeat.Name.Equals(reaction.Emote.Name))
+        if (!Emotes.Delete.Name.Equals(reaction.Emote.Name))
             return;
 
-        if (!_repeatCommandHandler.TryGet(cachedMessage.Id, out var repeatCommand))
-        {
-            var channel = await cachedMessage.GetOrDownloadAsync();
-            _logger.LogWarning("Missing repeat command handler for message {id}", cachedMessage.Id);
+        var message = await cachedMessage.GetOrDownloadAsync();
 
-            var message = BotMessage.NotImplemented(
-                "Sorry, unable to repeat command. There is a limitation I haven't sorted out yet.");
-
-            await channel.ReplyAsync(embed: message);
+        // if we are not the author of this message, then bail
+        if (message.Author.Id != _client.CurrentUser.Id)
             return;
-        }
 
-        await repeatCommand!();
+        _logger.LogInformation("Deleting message {id} at the request of {user}", 
+            cachedMessage.Id, 
+            reaction.User.IsSpecified ? reaction.User.Value : reaction.UserId);
+
+        await message.DeleteAsync();
     }
 }
