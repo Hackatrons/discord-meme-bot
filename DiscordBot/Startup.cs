@@ -6,8 +6,10 @@ using DiscordBot.Configuration;
 using DiscordBot.Filters;
 using DiscordBot.Logging;
 using DiscordBot.Services;
+using DiscordBot.Threading;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Serilog;
 
 namespace DiscordBot;
@@ -22,6 +24,8 @@ internal class Startup
         var config = BuildConfig(services);
         _ = BuildLogging(config, services);
         _provider = BuildServices(services);
+
+        FireAndForgetExtensions.Logger = _provider.GetRequiredService<ILogger<Task>>();
     }
 
     public Task StartAsync() =>

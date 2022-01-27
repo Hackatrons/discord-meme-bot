@@ -7,6 +7,7 @@ using DiscordBot.Models;
 using DiscordBot.Pushshift;
 using DiscordBot.Pushshift.Models;
 using DiscordBot.Reactions;
+using DiscordBot.Threading;
 
 namespace DiscordBot.Commands;
 
@@ -58,7 +59,7 @@ public abstract class BaseSearchCommand : InteractionModuleBase<SocketInteractio
         }
 
         var message = await FollowupAsync(result.Url);
-        await AddReactionsAndWatch(message, query);
+        AddReactionsAndWatch(message, query);
     }
 
     async IAsyncEnumerator<SearchResult> Search(PushshiftQuery query)
@@ -118,10 +119,11 @@ public abstract class BaseSearchCommand : InteractionModuleBase<SocketInteractio
         return results.Current;
     }
 
-    async Task AddReactionsAndWatch(IUserMessage message, string query)
+    void AddReactionsAndWatch(IUserMessage message, string query)
     {
         _repeatCommandHandler.Add(message.Id, () => RepeatCommand(query));
-        await message.AddReactionsAsync(ResultEmotes);
+        // adding reactions is very slow, so do this in a background task
+        message.AddReactionsAsync(ResultEmotes).Forget();
     }
 
     async Task RepeatCommand(string query)
@@ -135,6 +137,6 @@ public abstract class BaseSearchCommand : InteractionModuleBase<SocketInteractio
         }
 
         var message = await ReplyAsync(result.Url);
-        await AddReactionsAndWatch(message, query);
+        AddReactionsAndWatch(message, query);
     }
 }
