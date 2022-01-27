@@ -25,17 +25,22 @@ public class UrlCheckFilter : IResultsFilter
             // where the picture/content itself may have a different url, but the etag may be the identical (e.g. think file hash)
             // so we can filter out duplicates via the etag
             .Distinct(x => x.urlCheck.Etag ?? x.result.Url)
-            .Select(x => x.result);
+            // if we got a redirect url, use it instead
+            .Select(x => x.result with { Url = x.urlCheck.RedirectedToUrl ?? x.result.Url });
 
-    async Task<(bool Success, string? Etag)> TestUrl(string url)
+    async Task<(bool Success, string? Etag, string? RedirectedToUrl)> TestUrl(string url)
     {
         if (!Uri.TryCreate(url, UriKind.Absolute, out var uri))
-            return (false, null);
+            return (false, null, null);
 
         var request = new HttpRequestMessage(HttpMethod.Head, uri);
         using var client = _httpClientFactory.CreateClient();
         var response = await client.SendAsync(request);
 
-        return (response.IsSuccessStatusCode, response.Headers.ETag?.Tag);
+        // we may have followed some redirects in which case the end url is different to the original url
+        // provide the redirected url as discord doesn't seem to follow redirects
+        var responseUrl = response.RequestMessage?.RequestUri?.ToString();
+
+        return (response.IsSuccessStatusCode, response.Headers.ETag?.Tag, responseUrl);
     }
 }
