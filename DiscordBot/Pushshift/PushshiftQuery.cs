@@ -162,7 +162,7 @@ public class PushshiftQuery
             _title = _title,
             _query = _query,
             _sortDirection = _sortDirection,
-            _scoreFilterType = _scoreFilterType,
+            _scoreFilterType = _scoreFilterType
         };
 
         cloned._fields.AddRange(_fields);
@@ -174,13 +174,16 @@ public class PushshiftQuery
     public async Task<IEnumerable<PushshiftResult>> Execute(HttpClient client, CancellationToken cancellationToken = new())
     {
         var url = ToString();
-        var stream = await client.GetStreamAsync(url, cancellationToken);
-        var json = await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken);
-        var items = json.RootElement.GetProperty("data").EnumerateArray();
+        await using var stream = await client.GetStreamAsync(url, cancellationToken);
+        using var json = await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken);
+        using var items = json.RootElement.GetProperty("data").EnumerateArray();
 
         return items
             .Select(x => x.Deserialize<PushshiftResult?>())
             .Where(x => x != null && !string.IsNullOrEmpty(x.Url))
-            .Select(x => x!);
+            .Select(x => x!)
+            // evaluate the enumerable to avoid accessing a disposed json document
+            // as the json document gets disposed after this method ends
+            .ToList();
     }
 }

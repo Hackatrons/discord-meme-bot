@@ -18,11 +18,10 @@ public class SearchCommand : BaseSearchCommand
 
     [UsedImplicitly]
     [SlashCommand("search", "Search for anything (can include both sfw and nsfw results).")]
-    public Task Execute(string query) => Search(query);
+    public Task Execute(string query) => 
+        Search(query);
 
-    protected override PushshiftQuery BuildBaseQuery(string query)
-    {
-        return new PushshiftQuery()
+    protected override PushshiftQuery BuildBaseQuery(string query) =>
+        new PushshiftQuery()
             .Search(query);
-    }
 }

@@ -1,9 +1,8 @@
-﻿namespace DiscordBot.Models
+﻿namespace DiscordBot.Models;
+
+public enum MediaType
 {
-    public enum MediaType
-    {
-        Video,
-        Audio,
-        Image
-    }
+    Video,
+    Audio,
+    Image
 }

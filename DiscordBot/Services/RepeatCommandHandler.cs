@@ -8,7 +8,7 @@ using Microsoft.Extensions.Logging;
 
 namespace DiscordBot.Services;
 
-internal class RepeatCommandHandler : IDisposable
+internal class RepeatCommandHandler : IInitialise
 {
     readonly ILogger _logger;
     readonly DiscordSocketClient _client;
@@ -23,6 +23,7 @@ internal class RepeatCommandHandler : IDisposable
         _repeatCommandHandler = repeatCommandHandler.ThrowIfNull();
         _logger = logger.ThrowIfNull();
     }
+
     public void Initialise()
     {
         _client.ReactionAdded += OnReactionAdded;

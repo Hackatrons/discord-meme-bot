@@ -8,7 +8,7 @@ using Microsoft.Extensions.Options;
 
 namespace DiscordBot.Services;
 
-internal class CommandHandler : IDisposable
+internal class CommandHandler : IInitialise
 {
     readonly DiscordSocketClient _client;
     readonly InteractionService _interactions;

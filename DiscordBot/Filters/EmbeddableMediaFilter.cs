@@ -7,7 +7,7 @@ namespace DiscordBot.Filters;
 public class EmbeddableMediaFilter : IResultsFilter
 {
     // TODO: move to config
-    static readonly string[] MediaHostingDomains = new[]
+    static readonly string[] MediaHostingDomains =
     {
         "gfycat.com",
         "giphy.com",
@@ -17,8 +17,7 @@ public class EmbeddableMediaFilter : IResultsFilter
         "streamable.com",
         "youtube.com",
         "youtu.be"
-    }
-    .ToArray();
+    };
 
     static readonly string[] EmbeddableMimeTypes =
     {
@@ -27,8 +26,9 @@ public class EmbeddableMediaFilter : IResultsFilter
         "video"
     };
 
-    public IAsyncEnumerable<SearchResult> Filter(IAsyncEnumerable<SearchResult> input) =>
-        input.ThrowIfNull().Where(ProbablyEmbeddableMedia);
+    public IAsyncEnumerable<SearchResult> Filter(IAsyncEnumerable<SearchResult> input) => input
+        .ThrowIfNull()
+        .Where(ProbablyEmbeddableMedia);
 
     static bool ProbablyEmbeddableMedia(SearchResult result) =>
         result.MediaHint is MediaType.Video or MediaType.Audio or MediaType.Audio ||

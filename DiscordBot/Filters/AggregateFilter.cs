@@ -5,11 +5,7 @@ namespace DiscordBot.Filters;
 
 public class AggregateFilter : IResultsFilter
 {
-    readonly DomainBlacklistFilter _domainBlacklistFilter;
-    readonly DuplicateFilter _duplicateFilter;
-    readonly EmbeddableMediaFilter _embeddableMediaFilter;
-    readonly UrlCheckFilter _urlExistsFilter;
-    readonly RandomiserFilter _randomiserFilter;
+    readonly IResultsFilter[] _filters;
 
     public AggregateFilter(
         DomainBlacklistFilter domainBlacklistFilter,
@@ -18,28 +14,24 @@ public class AggregateFilter : IResultsFilter
         UrlCheckFilter urlExistsFilter,
         RandomiserFilter randomiserFilter)
     {
-        _randomiserFilter = randomiserFilter.ThrowIfNull();
-        _domainBlacklistFilter = domainBlacklistFilter.ThrowIfNull();
-        _duplicateFilter = duplicateFilter.ThrowIfNull();
-        _embeddableMediaFilter = embeddableMediaFilter.ThrowIfNull();
-        _urlExistsFilter = urlExistsFilter.ThrowIfNull();
-    }
-
-    public async IAsyncEnumerable<SearchResult> Filter(IAsyncEnumerable<SearchResult> input)
-    {
-        var filters = new IResultsFilter[]
+        _filters = new IResultsFilter[]
         {
             // note that the order here matters
             // where we want to the filters which have the least amount of work to do run first
             // and filters that are more expensive at the tail end of the pipeline
-            _domainBlacklistFilter,
-            _duplicateFilter,
-            _embeddableMediaFilter,
-            _randomiserFilter,
-            _urlExistsFilter,
+            domainBlacklistFilter.ThrowIfNull(),
+            duplicateFilter.ThrowIfNull(),
+            embeddableMediaFilter.ThrowIfNull(),
+            randomiserFilter.ThrowIfNull(),
+            urlExistsFilter.ThrowIfNull()
         };
+    }
 
-        var filtered = filters.Aggregate(input.ThrowIfNull(), (current, filter) => filter.Filter(current));
+    public async IAsyncEnumerable<SearchResult> Filter(IAsyncEnumerable<SearchResult> input)
+    {
+        var filtered = _filters.Aggregate(
+            input.ThrowIfNull(), 
+            (current, filter) => filter.Filter(current));
 
         await foreach (var result in filtered)
             yield return result;

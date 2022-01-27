@@ -1,11 +1,5 @@
-﻿using Discord;
-using Discord.Interactions;
-using Discord.WebSocket;
-using DiscordBot.Caching;
+﻿using DiscordBot.Bootstrap;
 using DiscordBot.Configuration;
-using DiscordBot.Filters;
-using DiscordBot.Logging;
-using DiscordBot.Services;
 using DiscordBot.Threading;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -28,50 +22,30 @@ internal class Startup
         FireAndForgetExtensions.Logger = _provider.GetRequiredService<ILogger<Task>>();
     }
 
-    public Task StartAsync() =>
-        _provider
-            .GetRequiredService<Bot>()
-            .StartAsync();
+    public Task StartAsync() => _provider
+        .GetRequiredService<Bot>()
+        .StartAsync();
 
-    public Task StopAsync() =>
-        _provider
-            .GetRequiredService<Bot>()
-            .StopAsync();
+    public Task StopAsync() => _provider
+        .GetRequiredService<Bot>()
+        .StopAsync();
 
     static IServiceProvider BuildServices(IServiceCollection services) => services
-        .AddSingleton(new DiscordSocketConfig
-        {
-            LogLevel = LogSeverity.Verbose,
-            GatewayIntents =
-                GatewayIntents.Guilds |
-                GatewayIntents.GuildMessages |
-                GatewayIntents.GuildMessageReactions
-        })
-        .AddSingleton<DiscordSocketClient>()
-        .AddSingleton(new InteractionServiceConfig
-        {
-            LogLevel = LogSeverity.Verbose
-        })
-        .AddSingleton<InteractionService>()
-        .AddSingleton<DiscordLogger>()
-        .AddSingleton<CommandHandler>()
-        .AddSingleton<RepeatCommandHandler>()
-        .AddSingleton<DeleteCommandHandler>()
-        .AddSingleton<ResultsCache>()
-        .AddSingleton<RepeatCommandCache>()
-        .AddSingleton<Bot>()
-        .AddResultsFilters()
         .AddHttpClient()
+        .AddDiscord()
+        .AddCommands()
+        .AddResultsFilters()
+        .AddSingleton<Bot>()
         .BuildServiceProvider();
 
     static IServiceCollection BuildLogging(IConfiguration configuration, IServiceCollection services) => services
-        .AddLogging(loggingBuilder =>
+        .AddLogging(builder =>
         {
             var serilog = new LoggerConfiguration()
                 .ReadFrom.Configuration(configuration)
                 .CreateLogger();
 
-            loggingBuilder.AddSerilog(
+            builder.AddSerilog(
                 serilog,
                 true);
         });
@@ -86,14 +60,8 @@ internal class Startup
             .Build();
 
         services
-            .AddOptions<DiscordSettings>()
-            .Bind(config.GetRequiredSection(Config.SectionName<DiscordSettings>()))
-            .ValidateDataAnnotations();
-
-        services
-            .AddOptions<TestingSettings>()
-            .Bind(config.GetRequiredSection(Config.SectionName<TestingSettings>()))
-            .ValidateDataAnnotations();
+            .AddSettings<DiscordSettings>(config)
+            .AddSettings<TestingSettings>(config);
 
         return config;
     }

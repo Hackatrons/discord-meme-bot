@@ -1,5 +1,6 @@
 ﻿using DiscordBot.Language;
 using DiscordBot.Models;
+using DiscordBot.Text;
 
 namespace DiscordBot.Filters;
 
@@ -12,11 +13,13 @@ public class DomainBlacklistFilter : IResultsFilter
         // TODO: is there a service out there we can leverage that converts v.reddit links to embeddable links?
         "v.redd.it",
         // not media
-        "reddit.com",
+        "reddit.com"
     };
 
-    static bool IsBlacklisted(string url) => BlacklistDomains.Any(x => url.Contains(x, StringComparison.OrdinalIgnoreCase));
+    static bool IsBlacklisted(string url) =>
+        BlacklistDomains.Any(url.ContainsIgnoreCase);
 
-    public IAsyncEnumerable<SearchResult> Filter(IAsyncEnumerable<SearchResult> input) =>
-        input.ThrowIfNull().Where(x => !IsBlacklisted(x.Url));
+    public IAsyncEnumerable<SearchResult> Filter(IAsyncEnumerable<SearchResult> input) => input
+        .ThrowIfNull()
+        .Where(x => !IsBlacklisted(x.Url));
 }

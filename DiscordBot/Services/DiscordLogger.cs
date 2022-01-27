@@ -4,9 +4,9 @@ using Discord.WebSocket;
 using DiscordBot.Language;
 using Microsoft.Extensions.Logging;
 
-namespace DiscordBot.Logging;
+namespace DiscordBot.Services;
 
-internal class DiscordLogger : IDisposable
+internal class DiscordLogger : IInitialise
 {
     readonly DiscordSocketClient _client;
     readonly InteractionService _interactions;
@@ -64,14 +64,18 @@ internal class DiscordLogger : IDisposable
     public void Dispose()
     {
         _client.Log -= OnLog;
-        _client.Log -= OnLog;
         _interactions.Log -= OnLog;
         _interactions.SlashCommandExecuted -= OnSlashCommandExecuted;
     }
 
     Task OnLog(LogMessage arg)
     {
+        // ignore the warning about static templates
+        // as we aren't using a message template here, just forwarding on a static log message
+        // as opposed to a structured log message which is what this warning is about
+#pragma warning disable CA2254 // Template should be a static expression
         _logger.Log(SeverityToLevel(arg.Severity), arg.Exception, arg.Message);
+#pragma warning restore CA2254 // Template should be a static expression
 
         return Task.CompletedTask;
     }
@@ -85,6 +89,6 @@ internal class DiscordLogger : IDisposable
             LogSeverity.Info => LogLevel.Information,
             LogSeverity.Debug => LogLevel.Debug,
             LogSeverity.Verbose => LogLevel.Trace,
-            _ => LogLevel.Information,
+            _ => LogLevel.Information
         };
 }

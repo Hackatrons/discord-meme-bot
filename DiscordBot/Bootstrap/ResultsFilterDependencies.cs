@@ -1,8 +1,9 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using DiscordBot.Filters;
+using Microsoft.Extensions.DependencyInjection;
 
-namespace DiscordBot.Filters;
+namespace DiscordBot.Bootstrap;
 
-internal static class DependencyInjectionExtensions
+internal static class ResultsFilterDependencies
 {
     public static IServiceCollection AddResultsFilters(this IServiceCollection services) => services
         .AddSingleton<DomainBlacklistFilter>()

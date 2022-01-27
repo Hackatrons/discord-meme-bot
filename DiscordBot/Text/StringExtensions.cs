@@ -1,14 +1,13 @@
-﻿namespace DiscordBot.Text
+﻿namespace DiscordBot.Text;
+
+/// <summary>
+/// Contains extension methods for strings
+/// </summary>
+public static class StringExtensions
 {
     /// <summary>
-    /// Contains extension methods for strings
+    /// Performs a case insensitive search
     /// </summary>
-    public static class StringExtensions
-    {
-        /// <summary>
-        /// Performs a case insensitive search
-        /// </summary>
-        public static bool ContainsIgnoreCase(this string s, string value)
-            => s.IndexOf(value, StringComparison.OrdinalIgnoreCase) >= 0;
-    }
+    public static bool ContainsIgnoreCase(this string s, string value)
+        => s.Contains(value, StringComparison.OrdinalIgnoreCase);
 }

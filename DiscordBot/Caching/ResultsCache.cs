@@ -25,5 +25,6 @@ public class ResultsCache
         });
     }
 
-    static string CacheKey(ulong channelId, string commandName, string arguments) => $"{channelId}-{commandName}-{arguments}";
+    static string CacheKey(ulong channelId, string commandName, string arguments) => 
+        $"{channelId}-{commandName}-{arguments}";
 }

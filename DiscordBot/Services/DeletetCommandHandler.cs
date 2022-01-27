@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 
 namespace DiscordBot.Services;
 
-internal class DeleteCommandHandler : IDisposable
+internal class DeleteCommandHandler : IInitialise
 {
     readonly ILogger _logger;
     readonly DiscordSocketClient _client;
@@ -18,6 +18,7 @@ internal class DeleteCommandHandler : IDisposable
         _client = client.ThrowIfNull();
         _logger = logger.ThrowIfNull();
     }
+
     public void Initialise()
     {
         _client.ReactionAdded += OnReactionAdded;

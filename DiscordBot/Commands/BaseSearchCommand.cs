@@ -106,7 +106,6 @@ public abstract class BaseSearchCommand : InteractionModuleBase<SocketInteractio
     async Task<SearchResult?> GetNextResult(string query)
     {
         var psQuery = BuildBaseQuery(query);
-
         var results = _cache.GetOrAdd(
             Context.Channel.Id,
             _typeName,
@@ -122,6 +121,7 @@ public abstract class BaseSearchCommand : InteractionModuleBase<SocketInteractio
     void AddReactionsAndWatch(IUserMessage message, string query)
     {
         _repeatCommandHandler.Add(message.Id, () => RepeatCommand(query));
+
         // adding reactions is very slow, so do this in a background task
         message.AddReactionsAsync(ResultEmotes).Forget();
     }

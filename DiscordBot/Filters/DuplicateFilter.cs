@@ -5,6 +5,7 @@ namespace DiscordBot.Filters;
 
 public class DuplicateFilter : IResultsFilter
 {
-    public IAsyncEnumerable<SearchResult> Filter(IAsyncEnumerable<SearchResult> input) =>
-        input.ThrowIfNull().Distinct(x => x.Url);
+    public IAsyncEnumerable<SearchResult> Filter(IAsyncEnumerable<SearchResult> input) => input
+        .ThrowIfNull()
+        .Distinct(x => x.Url);
 }

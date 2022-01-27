@@ -12,6 +12,7 @@ public static class CollectionExtensions
         // just a basic Fisher-Yates shuffle
         var list = await source.ToListAsync();
         var n = list.Count;
+
         while (n > 1)
         {
             n--;
