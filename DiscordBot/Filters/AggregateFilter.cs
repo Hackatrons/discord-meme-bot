@@ -14,7 +14,7 @@ public class AggregateFilter : IResultFilter
         DomainBlacklistFilter domainBlacklistFilter,
         DuplicateFilter duplicateFilter,
         EmbeddableMediaFilter embeddableMediaFilter,
-        UrlCheckFilter urlExistsFilter,
+        UrlCheckFilter urlCheckFilter,
         RandomiserFilter randomiserFilter)
     {
         _filters = new IResultFilter[]
@@ -26,7 +26,10 @@ public class AggregateFilter : IResultFilter
             duplicateFilter.ThrowIfNull(),
             embeddableMediaFilter.ThrowIfNull(),
             randomiserFilter.ThrowIfNull(),
-            urlExistsFilter.ThrowIfNull()
+            urlCheckFilter.ThrowIfNull(),
+            // the URL can change after the check filter if a redirect response is returned
+            // so slap in another duplicate check
+            duplicateFilter.ThrowIfNull()
         };
     }
 
