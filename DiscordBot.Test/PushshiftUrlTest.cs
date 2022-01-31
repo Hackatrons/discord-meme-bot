@@ -210,7 +210,7 @@ public class PushshiftUrlTest
     [TestMethod]
     public void QueryWithFieldsReturnsCorrectUrl()
     {
-        Assert.AreEqual("https://api.pushshift.io/reddit/search/submission/?q=asdf&fields=url,post_hint,num_comments,created_utc,score",
+        Assert.AreEqual("https://api.pushshift.io/reddit/search/submission/?q=asdf&fields=url,post_hint,created_utc",
             new PushshiftQuery()
                 .Search("asdf")
                 .Fields<PushshiftResult>()

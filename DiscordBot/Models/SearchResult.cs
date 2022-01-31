@@ -18,17 +18,9 @@ public record SearchResult
     /// </summary>
     public MediaType? MediaHint { get; init; }
     /// <summary>
-    /// Number of user comments in the thread.
-    /// </summary>
-    public int NumberOfComments { get; init; }
-    /// <summary>
     /// UTC datetime creation date.
     /// </summary>
     public DateTime CreatedUtc { get; init; }
-    /// <summary>
-    /// Overall community score.
-    /// </summary>
-    public int Score { get; init; }
 
     /// <summary>
     /// Constructs a search result from the given pushshift search result.
@@ -42,8 +34,6 @@ public record SearchResult
             PostHint.RichVideo or PostHint.HostedVideo => MediaType.Video,
             _ => null
         },
-        CreatedUtc = DateTimeExtensions.UnixTimeStampToDateTime(result.CreatedUtc.ThrowIfNull().Value),
-        NumberOfComments = result.NumComments ?? 0,
-        Score = result.Score ?? 0
+        CreatedUtc = DateTimeExtensions.UnixTimeStampToDateTime(result.CreatedUtc.ThrowIfNull().Value)
     };
 }
