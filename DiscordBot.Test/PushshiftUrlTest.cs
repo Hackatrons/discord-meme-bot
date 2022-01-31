@@ -119,7 +119,7 @@ public class PushshiftUrlTest
             new PushshiftQuery()
                 .Search("asdf")
                 .Subreddits("sr1", "sr2")
-                .Nsfw(true)
+                .Nsfw()
                 .Limit(100)
                 .ToString());
     }
@@ -131,7 +131,7 @@ public class PushshiftUrlTest
             new PushshiftQuery()
                 .Search("asdf")
                 .Subreddits("sr")
-                .Nsfw(false)
+                .Sfw()
                 .Limit(100)
                 .ToString());
     }

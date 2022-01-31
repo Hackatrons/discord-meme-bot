@@ -6,6 +6,9 @@ using Microsoft.Extensions.Logging;
 
 namespace DiscordBot.Services;
 
+/// <summary>
+/// Logging handler for discord services.
+/// </summary>
 internal class DiscordLogger : IInitialise
 {
     readonly DiscordSocketClient _client;

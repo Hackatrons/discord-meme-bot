@@ -8,6 +8,9 @@ using Serilog;
 
 namespace DiscordBot;
 
+/// <summary>
+/// Configures app dependencies and starts the application.
+/// </summary>
 internal class Startup
 {
     readonly IServiceProvider _provider;
@@ -16,16 +19,22 @@ internal class Startup
     {
         var services = new ServiceCollection();
         var config = BuildConfig(services);
-        _ = BuildLogging(config, services);
+        _ = BuildLogging(services, config);
         _provider = BuildServices(services);
 
         FireAndForgetExtensions.Logger = _provider.GetRequiredService<ILogger<Task>>();
     }
 
+    /// <summary>
+    /// Starts the application and returns once started.
+    /// </summary>
     public Task StartAsync() => _provider
         .GetRequiredService<Bot>()
         .StartAsync();
 
+    /// <summary>
+    /// Stops and disposes the application.
+    /// </summary>
     public Task StopAsync() => _provider
         .GetRequiredService<Bot>()
         .StopAsync();
@@ -34,11 +43,11 @@ internal class Startup
         .AddHttpClient()
         .AddDiscord()
         .AddCommands()
-        .AddResultsFilters()
+        .AddResultFilters()
         .AddSingleton<Bot>()
         .BuildServiceProvider();
 
-    static IServiceCollection BuildLogging(IConfiguration configuration, IServiceCollection services) => services
+    static IServiceCollection BuildLogging(IServiceCollection services, IConfiguration configuration) => services
         .AddLogging(builder =>
         {
             var serilog = new LoggerConfiguration()

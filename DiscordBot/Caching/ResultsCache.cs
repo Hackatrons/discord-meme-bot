@@ -3,6 +3,9 @@ using Microsoft.Extensions.Caching.Memory;
 
 namespace DiscordBot.Caching;
 
+/// <summary>
+/// A cache for storing search result sets.
+/// </summary>
 public class ResultsCache
 {
     // TODO: move to config
@@ -10,6 +13,9 @@ public class ResultsCache
 
     readonly MemoryCache _cache = new(new MemoryCacheOptions());
 
+    /// <summary>
+    /// Retrieves an existing or adds a new search results factory for the given command parameters.
+    /// </summary>
     public IAsyncEnumerator<SearchResult> GetOrAdd(
         ulong channelId,
         string commandName,

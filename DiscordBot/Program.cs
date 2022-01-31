@@ -5,6 +5,7 @@ try
 {
     var runToken = new CancellationTokenSource();
 
+    // kill signal listeners
     AssemblyLoadContext.Default.Unloading += _ => runToken.Cancel();
     AppDomain.CurrentDomain.ProcessExit += (_, _) => runToken.Cancel();
     Console.CancelKeyPress += (_, _) => runToken.Cancel();

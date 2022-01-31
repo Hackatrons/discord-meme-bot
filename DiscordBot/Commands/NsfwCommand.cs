@@ -6,8 +6,10 @@ using JetBrains.Annotations;
 
 namespace DiscordBot.Commands;
 
+/// <summary>
+/// A search command for NSFW content.
+/// </summary>
 [UsedImplicitly]
-// commands must be public classes for discord.net to use them
 public class NsfwCommand : BaseSearchCommand
 {
     public NsfwCommand(
@@ -23,5 +25,5 @@ public class NsfwCommand : BaseSearchCommand
     protected override PushshiftQuery BuildBaseQuery(string query) =>
         new PushshiftQuery()
             .Search(query)
-            .Nsfw(true);
+            .Nsfw();
 }

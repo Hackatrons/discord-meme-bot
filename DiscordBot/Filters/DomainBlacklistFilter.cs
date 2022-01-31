@@ -4,7 +4,10 @@ using DiscordBot.Text;
 
 namespace DiscordBot.Filters;
 
-public class DomainBlacklistFilter : IResultsFilter
+/// <summary>
+/// Filters out results that match a set of blacklisted domains.
+/// </summary>
+public class DomainBlacklistFilter : IResultFilter
 {
     // TODO: move to config
     static readonly string[] BlacklistDomains =

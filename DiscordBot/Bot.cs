@@ -9,6 +9,9 @@ using Microsoft.Extensions.Options;
 
 namespace DiscordBot;
 
+/// <summary>
+/// Starts and stops the discord bot.
+/// </summary>
 internal class Bot : IAsyncDisposable
 {
     readonly IInitialise[] _services;
@@ -32,6 +35,9 @@ internal class Bot : IAsyncDisposable
         _settings = discordSettings.ThrowIfNull().Value.ThrowIfNull();
     }
 
+    /// <summary>
+    /// Starts the bot and returns once started.
+    /// </summary>
     public async Task StartAsync()
     {
         if (_disposed) throw new ObjectDisposedException(nameof(Bot));
@@ -46,6 +52,9 @@ internal class Bot : IAsyncDisposable
         await _client.StartAsync();
     }
 
+    /// <summary>
+    /// Stops and disposes the bot.
+    /// </summary>
     public async Task StopAsync()
     {
         foreach (var service in _services)
@@ -58,6 +67,9 @@ internal class Bot : IAsyncDisposable
         _disposed = true;
     }
 
+    /// <summary>
+    /// Disposes the bot.
+    /// </summary>
     public async ValueTask DisposeAsync() => 
         await StopAsync();
 }

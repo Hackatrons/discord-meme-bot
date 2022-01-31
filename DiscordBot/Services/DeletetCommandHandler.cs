@@ -6,6 +6,9 @@ using Microsoft.Extensions.Logging;
 
 namespace DiscordBot.Services;
 
+/// <summary>
+/// Handler for delete commands.
+/// </summary>
 internal class DeleteCommandHandler : IInitialise
 {
     readonly ILogger _logger;

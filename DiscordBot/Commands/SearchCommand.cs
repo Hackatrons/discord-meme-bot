@@ -6,8 +6,10 @@ using JetBrains.Annotations;
 
 namespace DiscordBot.Commands;
 
+/// <summary>
+/// A search command for general content (can be both sfw and nsfw).
+/// </summary>
 [UsedImplicitly]
-// commands must be public classes for discord.net to use them
 public class SearchCommand : BaseSearchCommand
 {
     public SearchCommand(

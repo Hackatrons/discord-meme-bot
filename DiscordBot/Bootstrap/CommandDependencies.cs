@@ -4,8 +4,14 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace DiscordBot.Bootstrap;
 
+/// <summary>
+/// Extension methods to configure discord command dependencies.
+/// </summary>
 internal static class CommandDependencies
 {
+    /// <summary>
+    /// Adds discord commands and handlers to the container.
+    /// </summary>
     public static IServiceCollection AddCommands(this IServiceCollection services) => services
         .AddSingleton<DiscordLogger>()
         .AddSingleton<CommandHandler>()

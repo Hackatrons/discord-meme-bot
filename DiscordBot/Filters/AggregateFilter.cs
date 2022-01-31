@@ -3,9 +3,12 @@ using DiscordBot.Models;
 
 namespace DiscordBot.Filters;
 
-public class AggregateFilter : IResultsFilter
+/// <summary>
+/// Aggregates all search result filters one.
+/// </summary>
+public class AggregateFilter : IResultFilter
 {
-    readonly IResultsFilter[] _filters;
+    readonly IResultFilter[] _filters;
 
     public AggregateFilter(
         DomainBlacklistFilter domainBlacklistFilter,
@@ -14,7 +17,7 @@ public class AggregateFilter : IResultsFilter
         UrlCheckFilter urlExistsFilter,
         RandomiserFilter randomiserFilter)
     {
-        _filters = new IResultsFilter[]
+        _filters = new IResultFilter[]
         {
             // note that the order here matters
             // where we want to the filters which have the least amount of work to do run first

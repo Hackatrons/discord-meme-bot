@@ -8,6 +8,9 @@ using Microsoft.Extensions.Logging;
 
 namespace DiscordBot.Services;
 
+/// <summary>
+/// Handler for repeating commands.
+/// </summary>
 internal class RepeatCommandHandler : IInitialise
 {
     readonly ILogger _logger;

@@ -3,6 +3,9 @@ using JetBrains.Annotations;
 
 namespace DiscordBot.Language;
 
+/// <summary>
+/// Extension methods for null handling.
+/// </summary>
 public static class NullExtensions
 {
     /// <summary>

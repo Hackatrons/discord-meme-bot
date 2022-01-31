@@ -11,7 +11,10 @@ using DiscordBot.Threading;
 
 namespace DiscordBot.Commands;
 
-// commands must be public classes for discord.net to use them
+/// <summary>
+/// Base class for search related commands.
+/// Note: commands must be public classes for discord.net to use them
+/// </summary>
 public abstract class BaseSearchCommand : InteractionModuleBase<SocketInteractionContext>
 {
     const int SearchResultLimit = 200;
@@ -25,7 +28,7 @@ public abstract class BaseSearchCommand : InteractionModuleBase<SocketInteractio
     };
 
     readonly ResultsCache _cache;
-    readonly RepeatCommandCache _repeatCommandHandler;
+    readonly RepeatCommandCache _repeatCommandCache;
     readonly IHttpClientFactory _httpClientFactory;
     readonly AggregateFilter _filter;
     readonly string _typeName;
@@ -39,10 +42,13 @@ public abstract class BaseSearchCommand : InteractionModuleBase<SocketInteractio
         _cache = cache.ThrowIfNull();
         _filter = filter.ThrowIfNull();
         _httpClientFactory = httpClientFactory.ThrowIfNull();
-        _repeatCommandHandler = repeatCommandHandler.ThrowIfNull();
+        _repeatCommandCache = repeatCommandHandler.ThrowIfNull();
         _typeName = GetType().Name;
     }
 
+    /// <summary>
+    /// Builds a base pushshift query for the given search string.
+    /// </summary>
     protected abstract PushshiftQuery BuildBaseQuery(string query);
 
     protected async Task Search(string query)
@@ -51,6 +57,7 @@ public abstract class BaseSearchCommand : InteractionModuleBase<SocketInteractio
         // but we can defer the response and have up to 15mins to provide a follow up response
         await DeferAsync();
 
+        // retrieve the next result (either from cache or executing the query)
         var result = await GetNextResult(query);
         if (result == null)
         {
@@ -74,10 +81,11 @@ public abstract class BaseSearchCommand : InteractionModuleBase<SocketInteractio
     async Task<IEnumerable<SearchResult>> PerformSearch(PushshiftQuery baseQuery)
     {
         using var httpClient = _httpClientFactory.CreateClient();
+
         // mix 2 search results in together:
         // 1. ordered by highest score
         // 2. ordered by most recent
-        // I think this is a good mixture of results to include
+        // probably a good mixture of results
         var mostRecentTask = baseQuery
             .Clone()
             .Limit(SearchResultLimit)
@@ -96,6 +104,8 @@ public abstract class BaseSearchCommand : InteractionModuleBase<SocketInteractio
 
         var mostRecent = await mostRecentTask;
         var highestScore = await highestScoreTask;
+
+        // merge the result sets
         var combined = mostRecent
             .UnionBy(highestScore, x => x.Url)
             .Select(SearchResult.FromPushshift);
@@ -112,21 +122,19 @@ public abstract class BaseSearchCommand : InteractionModuleBase<SocketInteractio
             query,
             () => Search(psQuery));
 
-        if (!await results.MoveNextAsync())
-            return null;
-
-        return results.Current;
+        return await results.MoveNextAsync() ? results.Current : null;
     }
 
     void AddReactionsAndWatch(IUserMessage message, string query)
     {
-        _repeatCommandHandler.Add(message.Id, () => RepeatCommand(query));
+        // add the repeat action
+        _repeatCommandCache.Add(message.Id, () => Repeat(query));
 
         // adding reactions is very slow, so do this in a background task
         message.AddReactionsAsync(ResultEmotes).Forget();
     }
 
-    async Task RepeatCommand(string query)
+    async Task Repeat(string query)
     {
         using var state = Context.Channel.EnterTypingState();
         var result = await GetNextResult(query);

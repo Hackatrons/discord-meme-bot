@@ -4,7 +4,13 @@ using DiscordBot.Text;
 
 namespace DiscordBot.Filters;
 
-public class EmbeddableMediaFilter : IResultsFilter
+/// <summary>
+/// Excludes non-embeddable media links from the result set.
+/// Embeddable links are things such as videos, gifs, images, and audio.
+/// Other content such as HTML links will be excluded.
+/// The embeddable media detection method is not an exact science and may result in false positives and negatives.
+/// </summary>
+public class EmbeddableMediaFilter : IResultFilter
 {
     // TODO: move to config
     static readonly string[] MediaHostingDomains =

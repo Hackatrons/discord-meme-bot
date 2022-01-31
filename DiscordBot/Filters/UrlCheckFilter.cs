@@ -3,7 +3,10 @@ using DiscordBot.Models;
 
 namespace DiscordBot.Filters;
 
-public class UrlCheckFilter : IResultsFilter
+/// <summary>
+/// Probes search result URLs and filters out those that don't return a successful HTTP response. 
+/// </summary>
+public class UrlCheckFilter : IResultFilter
 {
     readonly IHttpClientFactory _httpClientFactory;
 

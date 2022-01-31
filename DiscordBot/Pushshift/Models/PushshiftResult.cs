@@ -4,6 +4,9 @@ using System.Text.Json.Serialization;
 
 namespace DiscordBot.Pushshift.Models;
 
+/// <summary>
+/// A pushshift json result.
+/// </summary>
 public record PushshiftResult
 {
     [JsonPropertyName("url")]

@@ -2,10 +2,14 @@
 
 namespace DiscordBot.Collections;
 
+/// <summary>
+/// Extension methods for collections.
+/// </summary>
 public static class CollectionExtensions
 {
     /// <summary>
-    /// Randomly shuffles a list. Enumerates the entire async enumerable.
+    /// Randomly shuffles a list.
+    /// Note: Enumerates the entire async enumerable.
     /// </summary>
     public static async IAsyncEnumerable<T> Shuffle<T>(this IAsyncEnumerable<T> source)
     {

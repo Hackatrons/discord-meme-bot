@@ -3,9 +3,15 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace DiscordBot.Bootstrap;
 
+/// <summary>
+/// Extension methods to configure result filters.
+/// </summary>
 internal static class ResultsFilterDependencies
 {
-    public static IServiceCollection AddResultsFilters(this IServiceCollection services) => services
+    /// <summary>
+    /// Adds result filters to the container.
+    /// </summary>
+    public static IServiceCollection AddResultFilters(this IServiceCollection services) => services
         .AddSingleton<DomainBlacklistFilter>()
         .AddSingleton<DuplicateFilter>()
         .AddSingleton<EmbeddableMediaFilter>()

@@ -8,6 +8,9 @@ using Microsoft.Extensions.Options;
 
 namespace DiscordBot.Services;
 
+/// <summary>
+/// Handler for executing commands.
+/// </summary>
 internal class CommandHandler : IInitialise
 {
     readonly DiscordSocketClient _client;

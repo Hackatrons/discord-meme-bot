@@ -8,6 +8,9 @@ using System.Text.Json.Serialization;
 
 namespace DiscordBot.Pushshift;
 
+/// <summary>
+/// A builder for constructing pushshift REST API queries.
+/// </summary>
 public class PushshiftQuery
 {
     // https://github.com/pushshift/api
@@ -24,18 +27,21 @@ public class PushshiftQuery
     ScoreFilterType? _scoreFilterType;
     SortDirection? _sortDirection;
 
+    /// <summary>
+    /// Filters based on one or more subreddits.
+    /// </summary>
     public PushshiftQuery Subreddits(params string[] subreddits)
     {
         _subreddits.AddRange(subreddits.ThrowIfNull());
         return this;
     }
 
-    public PushshiftQuery Fields(IEnumerable<string> fields)
-    {
-        _fields.AddRange(fields.ThrowIfNull());
-        return this;
-    }
-
+    /// <summary>
+    /// Specifies which fields to return in the json payload based on the type.
+    /// </summary>
+    /// <remarks>
+    /// Not really required, just reduces a bit of bandwidth and possibly provides a slight peformance improvement.
+    /// </remarks>
     public PushshiftQuery Fields<T>()
     {
         var fields = typeof(T)
@@ -47,9 +53,14 @@ public class PushshiftQuery
             })
             .Select(x => x.jsonAttribute?.Name ?? x.property.Name);
 
-        return Fields(fields);
+        _fields.AddRange(fields.ThrowIfNull());
+
+        return this;
     }
 
+    /// <summary>
+    /// Limits the number of search results returned in the response.
+    /// </summary>
     public PushshiftQuery Limit(int limit)
     {
         if (limit < 1)
@@ -59,24 +70,45 @@ public class PushshiftQuery
         return this;
     }
 
+    /// <summary>
+    /// Searches based on all available searchable fields.
+    /// </summary>
     public PushshiftQuery Search(string query)
     {
         _query = WebUtility.UrlEncode(query.ThrowIfNullOrWhitespace());
         return this;
     }
 
+    /// <summary>
+    /// Searches based on the post title.
+    /// </summary>
     public PushshiftQuery SearchTitle(string title)
     {
         _title = WebUtility.UrlEncode(title.ThrowIfNullOrWhitespace());
         return this;
     }
 
-    public PushshiftQuery Nsfw(bool nsfw)
+    /// <summary>
+    /// Filters the result set to only NSFW results.
+    /// </summary>
+    public PushshiftQuery Nsfw()
     {
-        _nsfw = nsfw;
+        _nsfw = true;
         return this;
     }
 
+    /// <summary>
+    /// Filters the result set to only SFW results.
+    /// </summary>
+    public PushshiftQuery Sfw()
+    {
+        _nsfw = false;
+        return this;
+    }
+
+    /// <summary>
+    /// Sorts the result set.
+    /// </summary>
     public PushshiftQuery Sort(SortType sort, SortDirection? sortDirection = null)
     {
         _sort = sort;
@@ -84,6 +116,9 @@ public class PushshiftQuery
         return this;
     }
 
+    /// <summary>
+    /// Filters the result set based on the score.
+    /// </summary>
     public PushshiftQuery FilterScore(int score, ScoreFilterType type)
     {
         _scoreFilterType = type;
@@ -92,11 +127,17 @@ public class PushshiftQuery
         return this;
     }
 
+    /// <summary>
+    /// Returns the constructed URL.
+    /// </summary>
     public override string ToString()
     {
         return ToUri().ToString();
     }
 
+    /// <summary>
+    /// Returns the constructed URL.
+    /// </summary>
     public Uri ToUri()
     {
         var builder = new UriBuilder(BaseUrl);
@@ -151,6 +192,9 @@ public class PushshiftQuery
         return builder.Uri;
     }
 
+    /// <summary>
+    /// Returns a new instance with all the settings copied.
+    /// </summary>
     public PushshiftQuery Clone()
     {
         var cloned = new PushshiftQuery
@@ -171,10 +215,14 @@ public class PushshiftQuery
         return cloned;
     }
 
+    /// <summary>
+    /// Invokes the Pushshift REST API and returns the results.
+    /// </summary>
     public async Task<IEnumerable<PushshiftResult>> Execute(HttpClient client, CancellationToken cancellationToken = new())
     {
         var url = ToString();
-        await using var stream = await client.GetStreamAsync(url, cancellationToken);
+
+        await using var stream = await client.ThrowIfNull().GetStreamAsync(url, cancellationToken);
         using var json = await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken);
         using var items = json.RootElement.GetProperty("data").EnumerateArray();
 
