@@ -8,6 +8,7 @@ using DiscordBot.Pushshift;
 using DiscordBot.Pushshift.Models;
 using DiscordBot.Reactions;
 using DiscordBot.Threading;
+using Microsoft.Extensions.Logging;
 
 namespace DiscordBot.Commands;
 
@@ -18,6 +19,7 @@ namespace DiscordBot.Commands;
 public abstract class BaseSearchCommand : InteractionModuleBase<SocketInteractionContext>
 {
     const int SearchResultLimit = 200;
+    const string NoResultsMessage = "No results.";
 
     static readonly IEmote[] ResultEmotes =
     {
@@ -30,18 +32,21 @@ public abstract class BaseSearchCommand : InteractionModuleBase<SocketInteractio
     readonly IHttpClientFactory _httpClientFactory;
     readonly AggregateFilter _filter;
     readonly string _typeName;
+    readonly ILogger _logger;
 
     protected BaseSearchCommand(
         ResultsCache cache,
         AggregateFilter filter,
         IHttpClientFactory httpClientFactory,
-        RepeatCommandCache repeatCommandHandler)
+        RepeatCommandCache repeatCommandHandler,
+        ILogger logger)
     {
         _cache = cache.ThrowIfNull();
         _filter = filter.ThrowIfNull();
         _httpClientFactory = httpClientFactory.ThrowIfNull();
         _repeatCommandCache = repeatCommandHandler.ThrowIfNull();
         _typeName = GetType().Name;
+        _logger = logger.ThrowIfNull();
     }
 
     /// <summary>
@@ -49,7 +54,7 @@ public abstract class BaseSearchCommand : InteractionModuleBase<SocketInteractio
     /// </summary>
     protected abstract PushshiftQuery BuildBaseQuery(string query);
 
-    protected async Task Search(string query)
+    protected async Task ExecuteInternal(string query)
     {
         // we only get 3 seconds to respond before discord times out our request
         // but we can defer the response and have up to 15mins to provide a follow up response
@@ -59,7 +64,7 @@ public abstract class BaseSearchCommand : InteractionModuleBase<SocketInteractio
         var result = await GetNextResult(query);
         if (result == null)
         {
-            await FollowupAsync("No results.");
+            await FollowupAsync(NoResultsMessage);
             return;
         }
 
@@ -67,18 +72,31 @@ public abstract class BaseSearchCommand : InteractionModuleBase<SocketInteractio
         AddReactionsAndWatch(message, query);
     }
 
-    async IAsyncEnumerator<SearchResult> Search(PushshiftQuery query)
+    async Task<SearchResult?> GetNextResult(string query)
     {
-        var results = await PerformSearch(query);
+        var results = _cache.GetOrAdd(
+            Context.Channel.Id,
+            _typeName,
+            query,
+            () => Search(query));
+
+        return await results.MoveNextAsync() ? results.Current : null;
+    }
+
+    async IAsyncEnumerator<SearchResult> Search(string query)
+    {
+        var results = await GetResults(query);
         var filtered = _filter.Filter(results.ToAsyncEnumerable());
 
         await foreach (var item in filtered)
             yield return item;
     }
 
-    async Task<IEnumerable<SearchResult>> PerformSearch(PushshiftQuery baseQuery)
+    async Task<IEnumerable<SearchResult>> GetResults(string query)
     {
         using var httpClient = _httpClientFactory.CreateClient();
+
+        var baseQuery = BuildBaseQuery(query);
 
         // mix 2 search results in together:
         // 1. ordered by highest score
@@ -100,8 +118,11 @@ public abstract class BaseSearchCommand : InteractionModuleBase<SocketInteractio
 
         await Task.WhenAll(mostRecentTask, highestScoreTask);
 
-        var mostRecent = await mostRecentTask;
-        var highestScore = await highestScoreTask;
+        var mostRecent = (await mostRecentTask).ToList();
+        var highestScore = (await highestScoreTask).ToList();
+
+        _logger.LogDebug("Found {count} most recent results for query '{query}'", mostRecent.Count, query);
+        _logger.LogDebug("Found {count} highest score results for query '{query}'", highestScore.Count, query);
 
         // merge the result sets
         var combined = mostRecent
@@ -111,16 +132,18 @@ public abstract class BaseSearchCommand : InteractionModuleBase<SocketInteractio
         return combined;
     }
 
-    async Task<SearchResult?> GetNextResult(string query)
+    async Task Repeat(string query)
     {
-        var psQuery = BuildBaseQuery(query);
-        var results = _cache.GetOrAdd(
-            Context.Channel.Id,
-            _typeName,
-            query,
-            () => Search(psQuery));
+        using var state = Context.Channel.EnterTypingState();
+        var result = await GetNextResult(query);
+        if (result == null)
+        {
+            await ReplyAsync(NoResultsMessage);
+            return;
+        }
 
-        return await results.MoveNextAsync() ? results.Current : null;
+        var message = await ReplyAsync(result.Url);
+        AddReactionsAndWatch(message, query);
     }
 
     void AddReactionsAndWatch(IUserMessage message, string query)
@@ -130,19 +153,5 @@ public abstract class BaseSearchCommand : InteractionModuleBase<SocketInteractio
 
         // adding reactions is very slow, so do this in a background task
         message.AddReactionsAsync(ResultEmotes).Forget();
-    }
-
-    async Task Repeat(string query)
-    {
-        using var state = Context.Channel.EnterTypingState();
-        var result = await GetNextResult(query);
-        if (result == null)
-        {
-            await ReplyAsync("No results.");
-            return;
-        }
-
-        var message = await ReplyAsync(result.Url);
-        AddReactionsAndWatch(message, query);
     }
 }

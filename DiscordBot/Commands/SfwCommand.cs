@@ -3,6 +3,7 @@ using DiscordBot.Caching;
 using DiscordBot.Filters;
 using DiscordBot.Pushshift;
 using JetBrains.Annotations;
+using Microsoft.Extensions.Logging;
 
 namespace DiscordBot.Commands;
 
@@ -16,12 +17,13 @@ public class SfwCommand : BaseSearchCommand
         ResultsCache cache,
         AggregateFilter filter,
         IHttpClientFactory httpClientFactory,
-        RepeatCommandCache repeatCommandHandler) : base(cache, filter, httpClientFactory, repeatCommandHandler) { }
+        RepeatCommandCache repeatCommandHandler,
+        ILogger<SfwCommand> logger) : base(cache, filter, httpClientFactory, repeatCommandHandler, logger) { }
 
     [UsedImplicitly]
     [SlashCommand("sfw", "Search for only sfw results.")]
     public Task Execute(string query) =>
-        Search(query);
+        ExecuteInternal(query);
 
     protected override PushshiftQuery BuildBaseQuery(string query) =>
         new PushshiftQuery()

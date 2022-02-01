@@ -1,6 +1,7 @@
 ﻿using DiscordBot.Language;
 using DiscordBot.Models;
 using DiscordBot.Text;
+using Microsoft.Extensions.Logging;
 
 namespace DiscordBot.Filters;
 
@@ -19,10 +20,24 @@ public class DomainBlacklistFilter : IResultFilter
         "reddit.com"
     };
 
+    readonly ILogger<DomainBlacklistFilter> _logger;
+
+    public DomainBlacklistFilter(ILogger<DomainBlacklistFilter> logger)
+    {
+        _logger = logger.ThrowIfNull();
+    }
+
     static bool IsBlacklisted(string url) =>
         BlacklistDomains.Any(url.ContainsIgnoreCase);
 
     public IAsyncEnumerable<SearchResult> Filter(IAsyncEnumerable<SearchResult> input) => input
         .ThrowIfNull()
-        .Where(x => !IsBlacklisted(x.Url));
+        .Where(x =>
+        {
+            var blacklisted = IsBlacklisted(x.Url);
+            if (blacklisted)
+                _logger.LogDebug("Excluding result {url} as the domain has been blacklisted.", x.Url);
+
+            return !blacklisted;
+        });
 }

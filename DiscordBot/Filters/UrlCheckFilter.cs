@@ -1,5 +1,6 @@
 ﻿using DiscordBot.Language;
 using DiscordBot.Models;
+using Microsoft.Extensions.Logging;
 
 namespace DiscordBot.Filters;
 
@@ -9,11 +10,16 @@ namespace DiscordBot.Filters;
 public class UrlCheckFilter : IResultFilter
 {
     readonly IHttpClientFactory _httpClientFactory;
+    readonly ILogger _logger;
 
     // inject a factory instead of a HttpClient as the lifespan of a HttpClient in this class is short and sporadic
     // and this class is a singleton
     // so we don't want to hold a reference to a lingering HttpClient forever
-    public UrlCheckFilter(IHttpClientFactory httpClientFactory) => _httpClientFactory = httpClientFactory.ThrowIfNull();
+    public UrlCheckFilter(IHttpClientFactory httpClientFactory, ILogger<UrlCheckFilter> logger)
+    {
+        _httpClientFactory = httpClientFactory.ThrowIfNull();
+        _logger = logger.ThrowIfNull();
+    }
 
     public IAsyncEnumerable<SearchResult> Filter(IAsyncEnumerable<SearchResult> input) => input
         .ThrowIfNull()
@@ -42,6 +48,9 @@ public class UrlCheckFilter : IResultFilter
         // we may have followed some redirects in which case the end url is different to the original url
         // provide the redirected url as discord doesn't seem to follow redirects
         var responseUrl = response.RequestMessage?.RequestUri?.ToString();
+
+        if (!response.IsSuccessStatusCode)
+            _logger.LogDebug("Excluding result {url} as the url returns a {code} response.", url, response.StatusCode);
 
         return (response.IsSuccessStatusCode, response.Headers.ETag?.Tag, responseUrl);
     }

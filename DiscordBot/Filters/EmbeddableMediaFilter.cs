@@ -1,6 +1,7 @@
 ﻿using DiscordBot.Language;
 using DiscordBot.Models;
 using DiscordBot.Text;
+using Microsoft.Extensions.Logging;
 
 namespace DiscordBot.Filters;
 
@@ -32,9 +33,23 @@ public class EmbeddableMediaFilter : IResultFilter
         "video"
     };
 
+    readonly ILogger<EmbeddableMediaFilter> _logger;
+
+    public EmbeddableMediaFilter(ILogger<EmbeddableMediaFilter> logger)
+    {
+        _logger = logger.ThrowIfNull();
+    }
+
     public IAsyncEnumerable<SearchResult> Filter(IAsyncEnumerable<SearchResult> input) => input
         .ThrowIfNull()
-        .Where(ProbablyEmbeddableMedia);
+        .Where(x =>
+        {
+            var embeddable = ProbablyEmbeddableMedia(x);
+            if (!embeddable)
+                _logger.LogDebug("Excluding result {url} as the url has been deemed non-embeddable.", x.Url);
+
+            return embeddable;
+        });
 
     static bool ProbablyEmbeddableMedia(SearchResult result) =>
         result.MediaHint is MediaType.Video or MediaType.Audio or MediaType.Audio ||
