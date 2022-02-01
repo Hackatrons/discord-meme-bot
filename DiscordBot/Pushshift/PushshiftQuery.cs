@@ -42,6 +42,21 @@ public class PushshiftQuery
     /// <remarks>
     /// Not really required, just reduces a bit of bandwidth and possibly provides a slight peformance improvement.
     /// </remarks>
+    public PushshiftQuery Fields(IEnumerable<string> fields)
+    {
+        _fields.AddRange(fields.ThrowIfNull());
+
+        return this;
+    }
+
+    /// <summary>
+    /// Specifies which fields to return in the json payload based on the type.
+    /// </summary>
+    /// <remarks>
+    /// Not really required, just reduces a bit of bandwidth and possibly provides a slight peformance improvement.
+    /// Also only works for top level fields as it doesn't look like pushshift allows us to specify sub-fields e.g. "preview.enabled".
+    /// By specifying "preview" however, all sub-fields are still returned from the API.
+    /// </remarks>
     public PushshiftQuery Fields<T>()
     {
         var fields = typeof(T)
@@ -53,9 +68,7 @@ public class PushshiftQuery
             })
             .Select(x => x.jsonAttribute?.Name ?? x.property.Name);
 
-        _fields.AddRange(fields.ThrowIfNull());
-
-        return this;
+        return Fields(fields);
     }
 
     /// <summary>

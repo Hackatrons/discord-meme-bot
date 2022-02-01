@@ -1,6 +1,4 @@
-﻿// ReSharper disable UnusedMember.Global
-
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 
 namespace DiscordBot.Pushshift.Models;
 
@@ -32,4 +30,6 @@ public record PushshiftResult
     /// </summary>
     [JsonPropertyName("selftext")]
     public string? Selftext { get; set; }
+    [JsonPropertyName("preview")]
+    public Preview? Preview { get; set; }
 }

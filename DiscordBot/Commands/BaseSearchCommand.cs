@@ -125,12 +125,13 @@ public abstract class BaseSearchCommand : InteractionModuleBase<SocketInteractio
         // merge the result sets
         var combined = mostRecent
             .UnionBy(highestScore, x => x.Url)
-            .ToList();
+            // filter out reddit self posts
+            .Where(x => !x.IsSelf.GetValueOrDefault());
 
-        // extract any additional results from the reddit post
-        var additionalResults = combined
+        // extract any additional results from reddit posts
+        var additionalResults = mostRecent
             .SelectMany(x => x.ExtractUrls())
-            .Select(x => new SearchResult { Url = x })
+            .UnionBy(highestScore.SelectMany(x => x.ExtractUrls()), x => x.Url)
             .ToList();
 
         // merge the additional results in

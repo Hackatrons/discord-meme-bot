@@ -23,7 +23,8 @@ public class EmbeddableMediaFilter : IResultFilter
         "instagram.com",
         "streamable.com",
         "youtube.com",
-        "youtu.be"
+        "youtu.be",
+        "v.redd.it"
     };
 
     static readonly string[] EmbeddableMimeTypes =

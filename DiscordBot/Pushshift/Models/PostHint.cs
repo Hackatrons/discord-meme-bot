@@ -1,6 +1,4 @@
-﻿// ReSharper disable UnusedMember.Global
-
-namespace DiscordBot.Pushshift.Models;
+﻿namespace DiscordBot.Pushshift.Models;
 
 /// <summary>
 /// A pushshift post hint.
