@@ -15,13 +15,10 @@ public static class CollectionExtensions
     {
         // just a basic Fisher-Yates shuffle
         var list = await source.ToListAsync();
-        var n = list.Count;
-
-        while (n > 1)
+        for (var i = list.Count - 1; i > 0; i--)
         {
-            n--;
-            var k = ThreadSafeRandom.Random.Next(n + 1);
-            (list[k], list[n]) = (list[n], list[k]);
+            var k = ThreadSafeRandom.Random.Next(i + 1);
+            (list[k], list[i]) = (list[i], list[k]);
         }
 
         foreach (var item in list)

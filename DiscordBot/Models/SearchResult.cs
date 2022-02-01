@@ -1,6 +1,5 @@
 ﻿using DiscordBot.Language;
 using DiscordBot.Pushshift.Models;
-using DiscordBot.Time;
 
 namespace DiscordBot.Models;
 
@@ -17,10 +16,6 @@ public record SearchResult
     /// An optional hint to the type of media of this result.
     /// </summary>
     public MediaType? MediaHint { get; init; }
-    /// <summary>
-    /// UTC datetime creation date.
-    /// </summary>
-    public DateTime CreatedUtc { get; init; }
 
     /// <summary>
     /// Constructs a search result from the given pushshift search result.
@@ -33,7 +28,6 @@ public record SearchResult
             PostHint.Image => MediaType.Image,
             PostHint.RichVideo or PostHint.HostedVideo => MediaType.Video,
             _ => null
-        },
-        CreatedUtc = DateTimeExtensions.UnixTimeStampToDateTime(result.CreatedUtc.ThrowIfNull().Value)
+        }
     };
 }

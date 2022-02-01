@@ -18,7 +18,8 @@ namespace DiscordBot.Commands;
 /// </summary>
 public abstract class BaseSearchCommand : InteractionModuleBase<SocketInteractionContext>
 {
-    const int SearchResultLimit = 200;
+    // pushshift has a hard limit of 100
+    const int SearchResultLimit = 100;
     const string NoResultsMessage = "No results.";
 
     static readonly IEmote[] ResultEmotes =
@@ -121,15 +122,30 @@ public abstract class BaseSearchCommand : InteractionModuleBase<SocketInteractio
         var mostRecent = (await mostRecentTask).ToList();
         var highestScore = (await highestScoreTask).ToList();
 
-        _logger.LogDebug("Found {count} most recent results for query '{query}'", mostRecent.Count, query);
-        _logger.LogDebug("Found {count} highest score results for query '{query}'", highestScore.Count, query);
-
         // merge the result sets
         var combined = mostRecent
             .UnionBy(highestScore, x => x.Url)
-            .Select(SearchResult.FromPushshift);
+            .ToList();
 
-        return combined;
+        // extract any additional results from the reddit post
+        var additionalResults = combined
+            .SelectMany(x => x.ExtractUrls())
+            .Select(x => new SearchResult { Url = x })
+            .ToList();
+
+        // merge the additional results in
+        // the final result be unique by url
+        var results = combined
+            .Select(SearchResult.FromPushshift)
+            .UnionBy(additionalResults, x => x.Url)
+            .ToList();
+
+        _logger.LogDebug("Found {count} most recent results for query '{query}'.", mostRecent.Count, query);
+        _logger.LogDebug("Found {count} highest score results for query '{query}'.", highestScore.Count, query);
+        _logger.LogDebug("Found {count} additional urls for query '{query}'.", additionalResults.Count, query);
+        _logger.LogDebug("After merging, a total of {count} results were found for query '{query}'.", results.Count, query);
+
+        return results;
     }
 
     async Task Repeat(string query)

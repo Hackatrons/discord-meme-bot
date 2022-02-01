@@ -13,7 +13,6 @@ internal static class ResultsFilterDependencies
     /// </summary>
     public static IServiceCollection AddResultFilters(this IServiceCollection services) => services
         .AddSingleton<DomainBlacklistFilter>()
-        .AddSingleton<DuplicateFilter>()
         .AddSingleton<EmbeddableMediaFilter>()
         .AddSingleton<UrlCheckFilter>()
         .AddSingleton<AggregateFilter>()

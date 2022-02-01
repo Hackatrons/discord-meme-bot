@@ -12,7 +12,6 @@ public class AggregateFilter : IResultFilter
 
     public AggregateFilter(
         DomainBlacklistFilter domainBlacklistFilter,
-        DuplicateFilter duplicateFilter,
         EmbeddableMediaFilter embeddableMediaFilter,
         UrlCheckFilter urlCheckFilter,
         RandomiserFilter randomiserFilter)
@@ -23,13 +22,11 @@ public class AggregateFilter : IResultFilter
             // where we want to the filters which have the least amount of work to do run first
             // and filters that are more expensive at the tail end of the pipeline
             domainBlacklistFilter.ThrowIfNull(),
-            duplicateFilter.ThrowIfNull(),
             embeddableMediaFilter.ThrowIfNull(),
+            // the randomiser filter consumes the async enumerable
+            // so we should be careful about preceeding filters
             randomiserFilter.ThrowIfNull(),
-            urlCheckFilter.ThrowIfNull(),
-            // the URL can change after the check filter if a redirect response is returned
-            // so slap in another duplicate check
-            duplicateFilter.ThrowIfNull()
+            urlCheckFilter.ThrowIfNull()
         };
     }
 
