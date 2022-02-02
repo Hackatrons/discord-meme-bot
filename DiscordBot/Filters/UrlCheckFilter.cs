@@ -43,15 +43,24 @@ public class UrlCheckFilter : IResultFilter
 
         using var client = _httpClientFactory.CreateClient();
         using var request = new HttpRequestMessage(HttpMethod.Head, uri);
-        using var response = await client.SendAsync(request);
 
-        // we may have followed some redirects in which case the end url is different to the original url
-        // provide the redirected url as discord doesn't seem to follow redirects
-        var responseUrl = response.RequestMessage?.RequestUri?.ToString();
+        try
+        {
+            using var response = await client.SendAsync(request);
 
-        if (!response.IsSuccessStatusCode)
-            _logger.LogDebug("Excluding result {url} as the url returns a {code} response.", url, response.StatusCode);
+            // we may have followed some redirects in which case the end url is different to the original url
+            // provide the redirected url as discord doesn't seem to follow redirects
+            var responseUrl = response.RequestMessage?.RequestUri?.ToString();
 
-        return (response.IsSuccessStatusCode, response.Headers.ETag?.Tag, responseUrl);
+            if (!response.IsSuccessStatusCode)
+                _logger.LogDebug("Excluding result {url} as the url returns a {code} response.", url, response.StatusCode);
+
+            return (response.IsSuccessStatusCode, response.Headers.ETag?.Tag, responseUrl);
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogWarning("Error while testing url {url}. Error: {error}", url, ex);
+            return (false, null, null);
+        }
     }
 }
