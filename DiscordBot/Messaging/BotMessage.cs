@@ -8,6 +8,9 @@ namespace DiscordBot.Messaging;
 /// </summary>
 internal static class BotMessage
 {
+    public const string NoResultsMessage = "No results.";
+    public const string NoMoreResultsMessage = "No more results.";
+
     /// <summary>
     /// Returns an error message embed from the specified error details.
     /// </summary>

@@ -1,5 +1,7 @@
-﻿using DiscordBot.Models;
-using Microsoft.Extensions.Caching.Memory;
+﻿using DiscordBot.Configuration;
+using DiscordBot.Language;
+using DiscordBot.Models;
+using System.Text.Json;
 
 namespace DiscordBot.Caching;
 
@@ -8,29 +10,43 @@ namespace DiscordBot.Caching;
 /// </summary>
 public class ResultsCache
 {
-    // TODO: move to config
-    static readonly TimeSpan CacheDuration = TimeSpan.FromHours(8);
+    readonly CacheSettings _settings;
+    readonly ICache _cache;
 
-    readonly MemoryCache _cache = new(new MemoryCacheOptions());
+    public ResultsCache(ICache cache, CacheSettings settings)
+    {
+        _cache = cache.ThrowIfNull();
+        _settings = settings.ThrowIfNull();
+    }
 
     /// <summary>
-    /// Retrieves an existing or adds a new search results factory for the given command parameters.
+    /// Retrieves the existing search results for the the given command parameters, or null if there is nothing cached.
     /// </summary>
-    public IAsyncEnumerator<SearchResult> GetOrAdd(
+    public async Task<IReadOnlyCollection<SearchResult>?> Get(
         ulong channelId,
         string commandName,
-        string arguments,
-        Func<IAsyncEnumerator<SearchResult>> resultsFactory)
+        string arguments)
     {
         var key = CacheKey(channelId, commandName, arguments);
 
-        return _cache.GetOrCreate(key, x =>
-        {
-            x.SetAbsoluteExpiration(CacheDuration);
-            return resultsFactory();
-        });
+        var cachedResults = await _cache.Get(key);
+        return cachedResults != null ? JsonSerializer.Deserialize<SearchResult[]>(cachedResults) : null;
     }
 
-    static string CacheKey(ulong channelId, string commandName, string arguments) => 
+    /// <summary>
+    /// Stores the search results for the the given command parameters.
+    /// </summary>
+    public async Task Set(
+        ulong channelId,
+        string commandName,
+        string arguments,
+        IEnumerable<SearchResult> results)
+    {
+        var key = CacheKey(channelId, commandName, arguments);
+        var resultsString = JsonSerializer.Serialize(results);
+        await _cache.Set(key, resultsString, _settings.Duration);
+    }
+
+    static string CacheKey(ulong channelId, string commandName, string arguments) =>
         $"{channelId}-{commandName}-{arguments}";
 }

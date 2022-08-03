@@ -1,7 +1,4 @@
-﻿using System.Linq;
-using System.Threading.Tasks;
-using DiscordBot.Filters;
-using DiscordBot.Models;
+﻿using DiscordBot.Filters;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace DiscordBot.Test;
@@ -10,23 +7,12 @@ namespace DiscordBot.Test;
 public class DomainBlacklistFilterTest
 {
     [TestMethod]
-    public async Task EnsureDirectDashLinksAreAllowed()
+    public void EnsureDirectDashLinksAreAllowed()
     {
-        var filter = new DomainBlacklistFilter(new UnitTestLogger<DomainBlacklistFilter>());
+        const string shouldAllow = "https://v.redd.it/123/DASH_720.mp4";
+        const string shouldDisallow = "https://v.redd.it/123/";
 
-        var shouldAllow = new SearchResult
-        {
-            Url = "https://v.redd.it/123/DASH_720.mp4"
-        };
-        var shouldDisallow = new SearchResult
-        {
-            Url = "https://v.redd.it/123/"
-        };
-
-        var allowed = await filter.Filter(new[] { shouldAllow }.ToAsyncEnumerable()).ToListAsync();
-        Assert.AreEqual(1, allowed.Count);
-
-        var disallowed = await filter.Filter(new[] { shouldDisallow }.ToAsyncEnumerable()).ToListAsync();
-        Assert.AreEqual(0, disallowed.Count);
+        Assert.AreEqual(true, DomainBlacklistFilter.IsAllowed(shouldAllow));
+        Assert.AreEqual(false, DomainBlacklistFilter.IsAllowed(shouldDisallow)); 
     }
 }

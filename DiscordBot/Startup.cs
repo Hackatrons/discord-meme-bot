@@ -20,7 +20,7 @@ internal class Startup
         var services = new ServiceCollection();
         var config = BuildConfig(services);
         _ = BuildLogging(services, config);
-        _provider = BuildServices(services);
+        _provider = BuildServices(services, config);
 
         FireAndForgetExtensions.Logger = _provider.GetRequiredService<ILogger<Task>>();
     }
@@ -39,12 +39,12 @@ internal class Startup
         .GetRequiredService<Bot>()
         .StopAsync();
 
-    static IServiceProvider BuildServices(IServiceCollection services) => services
+    static IServiceProvider BuildServices(IServiceCollection services, IConfiguration configuration) => services
         .AddHttpClient()
         .AddDiscord()
         .AddCommands()
-        .AddResultFilters()
         .AddSingleton<Bot>()
+        .AddCaching(configuration)
         .BuildServiceProvider();
 
     static IServiceCollection BuildLogging(IServiceCollection services, IConfiguration configuration) => services
@@ -70,7 +70,8 @@ internal class Startup
 
         services
             .AddSettings<DiscordSettings>(config)
-            .AddSettings<TestingSettings>(config);
+            .AddSettings<TestingSettings>(config)
+            .AddSettings<CacheSettings>(config);
 
         return config;
     }

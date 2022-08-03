@@ -18,6 +18,16 @@ public record SearchResult
     public MediaType? MediaHint { get; init; }
 
     /// <summary>
+    /// True if this search result has been used (i.e. sent to the discord chat), otherwise false.
+    /// </summary>
+    public bool Consumed { get; set; }
+
+    /// <summary>
+    /// Contains the result of the URL probe (if this result has been probed).
+    /// </summary>
+    public ProbeResult? Probe { get; set; }
+
+    /// <summary>
     /// Constructs a search result from the given pushshift search result.
     /// </summary>
     public static SearchResult FromPushshift(PushshiftResult result) => new()

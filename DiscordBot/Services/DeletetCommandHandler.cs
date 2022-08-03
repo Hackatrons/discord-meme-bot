@@ -50,8 +50,8 @@ internal class DeleteCommandHandler : IInitialise
         if (message.Author.Id != _client.CurrentUser.Id)
             return;
 
-        _logger.LogInformation("Deleting message {id} at the request of {user}", 
-            cachedMessage.Id, 
+        _logger.LogInformation("Deleting message {id} at the request of {user}",
+            cachedMessage.Id,
             reaction.User.IsSpecified ? reaction.User.Value : reaction.UserId);
 
         await message.DeleteAsync();

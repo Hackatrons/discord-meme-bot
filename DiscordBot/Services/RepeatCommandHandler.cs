@@ -3,28 +3,37 @@ using Discord.WebSocket;
 using DiscordBot.Caching;
 using DiscordBot.Language;
 using DiscordBot.Messaging;
+using DiscordBot.Queries;
 using DiscordBot.Reactions;
 using Microsoft.Extensions.Logging;
+using System.Text.Json;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace DiscordBot.Services;
 
 /// <summary>
 /// Handler for repeating commands.
 /// </summary>
-internal class RepeatCommandHandler : IInitialise
+public class RepeatCommandHandler : IInitialise
 {
     readonly ILogger _logger;
+    readonly IServiceProvider _serviceProvider;
+    readonly ICache _cache;
     readonly DiscordSocketClient _client;
-    readonly RepeatCommandCache _repeatCommandHandler;
+    readonly EmoticonsHandler _emoticonsHandler;
 
     public RepeatCommandHandler(
         DiscordSocketClient client,
-        RepeatCommandCache repeatCommandHandler,
-        ILogger<RepeatCommandHandler> logger)
+        ILogger<RepeatCommandHandler> logger,
+        IServiceProvider serviceProvider,
+        ICache cache,
+        EmoticonsHandler emoticonsHandler)
     {
+        _cache = cache.ThrowIfNull();
+        _serviceProvider = serviceProvider.ThrowIfNull();
         _client = client.ThrowIfNull();
-        _repeatCommandHandler = repeatCommandHandler.ThrowIfNull();
         _logger = logger.ThrowIfNull();
+        _emoticonsHandler = emoticonsHandler.ThrowIfNull();
     }
 
     public void Initialise()
@@ -35,6 +44,16 @@ internal class RepeatCommandHandler : IInitialise
     public void Dispose()
     {
         _client.ReactionAdded -= OnReactionAdded;
+    }
+
+    /// <summary>
+    /// Registers a message to be watched for repeating the command when a user reacts with the repeat emoticon.
+    /// </summary>
+    public async Task Watch(IUserMessage message, BaseQueryHandler queryHandler, string query)
+    {
+        var repeatData = new RepeatCommandData(query, queryHandler.GetType().FullName!);
+
+        await _cache.Set(message.Id.ToString(), JsonSerializer.Serialize(repeatData));
     }
 
     async Task OnReactionAdded(
@@ -49,18 +68,59 @@ internal class RepeatCommandHandler : IInitialise
         if (!Emotes.Repeat.Name.Equals(reaction.Emote.Name))
             return;
 
-        if (!_repeatCommandHandler.TryGet(cachedMessage.Id, out var repeatCommand))
+        var repeatDataString = await _cache.Get(cachedMessage.Id.ToString());
+        if (string.IsNullOrEmpty(repeatDataString))
         {
-            var channel = await cachedMessage.GetOrDownloadAsync();
+            var message = await cachedMessage.GetOrDownloadAsync();
+
+            // if it's not our message, ignore
+            if (message.Author.Id != _client.CurrentUser.Id)
+                return;
+
             _logger.LogWarning("Missing repeat command handler for message {id}", cachedMessage.Id);
 
-            var message = BotMessage.NotImplemented(
-                "Sorry, unable to repeat command. There is a limitation I haven't sorted out yet.");
-
-            await channel.ReplyAsync(embed: message);
+            await message.ReplyAsync(embed: BotMessage.NotImplemented("Sorry, unable to repeat command as I've lost the original query context."));
             return;
         }
 
-        await repeatCommand!();
+        var repeatData = JsonSerializer.Deserialize<RepeatCommandData>(repeatDataString);
+        if (repeatData == null) return;
+
+        var type = Type.GetType(repeatData.Type);
+        if (type == null)
+        {
+            _logger.LogError("Unable to find query handler type '{type}'", repeatData.Type);
+            return;
+        }
+
+        if (!type.IsAssignableTo(typeof(BaseQueryHandler)))
+        {
+            _logger.LogError("Type '{type}' is not a query handler type.", repeatData.Type);
+            return;
+        }
+
+        var channel = await cachedChannel.GetOrDownloadAsync();
+        var queryHandler = (BaseQueryHandler)_serviceProvider.GetRequiredService(type);
+
+        await Repeat(repeatData.Query, queryHandler, channel);
+    }
+
+    async Task Repeat(string query, BaseQueryHandler handler, IMessageChannel channel)
+    {
+        // if this is a repeat command, then we'll get a cache hit
+        // so our response time should be within 3 seconds
+        using var state = channel.EnterTypingState();
+
+        // retrieve the next result (either from cache or executing the query)
+        var (result, finished) = await handler.SearchNext(query, channel.Id);
+        if (result == null)
+        {
+            await channel.SendMessageAsync(finished ? BotMessage.NoMoreResultsMessage : BotMessage.NoResultsMessage);
+            return;
+        }
+
+        var message = await channel.SendMessageAsync(result.Url);
+        await _emoticonsHandler.AddResultReactions(message);
+        await Watch(message, handler, query);
     }
 }

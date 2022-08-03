@@ -1,32 +1,21 @@
-﻿using DiscordBot.Language;
-using DiscordBot.Models;
-using DiscordBot.Text;
-using Microsoft.Extensions.Logging;
+﻿using DiscordBot.Text;
 
 namespace DiscordBot.Filters;
 
 /// <summary>
 /// Filters out results that match a set of blacklisted domains.
 /// </summary>
-public class DomainBlacklistFilter : IResultFilter
+public static class DomainBlacklistFilter
 {
     const string RedditVideoHost = "v.redd.it";
 
-    // TODO: move to config
     static readonly string[] BlacklistDomains =
     {
         // not media
         "reddit.com"
     };
 
-    readonly ILogger<DomainBlacklistFilter> _logger;
-
-    public DomainBlacklistFilter(ILogger<DomainBlacklistFilter> logger)
-    {
-        _logger = logger.ThrowIfNull();
-    }
-
-    static bool IsAllowed(string url)
+    public static bool IsAllowed(string url)
     {
         if (!Uri.TryCreate(url, UriKind.RelativeOrAbsolute, out var uri))
             return false;
@@ -49,15 +38,4 @@ public class DomainBlacklistFilter : IResultFilter
         var numberOfSlashes = uri.PathAndQuery.Trim('/').Count(c => c == '/');
         return numberOfSlashes >= 1;
     }
-
-    public IAsyncEnumerable<SearchResult> Filter(IAsyncEnumerable<SearchResult> input) => input
-        .ThrowIfNull()
-        .Where(x =>
-        {
-            var allowed = IsAllowed(x.Url);
-            if (!allowed)
-                _logger.LogDebug("Excluding result {url} as the domain has been blacklisted.", x.Url);
-
-            return allowed;
-        });
 }

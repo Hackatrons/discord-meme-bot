@@ -1,4 +1,5 @@
-﻿using DiscordBot.Caching;
+﻿using DiscordBot.Filters;
+using DiscordBot.Queries;
 using DiscordBot.Services;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -17,13 +18,17 @@ internal static class CommandDependencies
         .AddSingleton<CommandHandler>()
         .AddSingleton<RepeatCommandHandler>()
         .AddSingleton<DeleteCommandHandler>()
-        .AddSingleton<ResultsCache>()
-        .AddSingleton<RepeatCommandCache>()
+        .AddSingleton<ResultProber>()
         .AddSingleton(x => new IInitialise[]
         {
             x.GetRequiredService<DiscordLogger>(),
             x.GetRequiredService<CommandHandler>(),
             x.GetRequiredService<RepeatCommandHandler>(),
             x.GetRequiredService<DeleteCommandHandler>()
-        });
+        })
+        .AddSingleton<EmoticonsHandler>()
+        // add the query handlers
+        .AddSingleton<NsfwQueryHandler>()
+        .AddSingleton<SfwQueryHandler>()
+        .AddSingleton<SearchQueryHandler>();
 }

@@ -1,6 +1,7 @@
 ﻿using DiscordBot.Configuration;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 namespace DiscordBot.Bootstrap;
 
@@ -22,6 +23,8 @@ internal static class ConfigurationDependencies
             .AddOptions<T>()
             .Bind(configuration.GetRequiredSection(Config.SectionName<T>()))
             .ValidateDataAnnotations();
+
+        services.AddScoped(s => s.GetRequiredService<IOptions<T>>().Value);
 
         return services;
     }

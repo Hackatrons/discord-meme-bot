@@ -10,17 +10,18 @@ stages:
     - test
     - build-docker
 
-before_script:
-    - "dotnet restore"
-
 build:
     stage: build
     script:
+        - "cd DiscordBot/"
+        - "dotnet restore"
         - "dotnet build"
 
 test:
     stage: test
     script:
+        - "cd DiscordBot/"
+        - "dotnet restore"
         - "dotnet test"
 
 build-docker:
@@ -33,7 +34,5 @@ build-docker:
   before_script:
     - docker login -u "$REGISTRY_USER" -p "$REGISTRY_PASSWORD" $REGISTRY_URL
   script:
-    - cd DiscordBot/
-    - docker build -t $REGISTRY_URL/discord-meme-bot/bot:latest . -f ./Dockerfile
+    - docker build -t $REGISTRY_URL/discord-meme-bot/bot:latest . -f ./DiscordBot/Dockerfile
     - docker push $REGISTRY_URL/discord-meme-bot/bot:latest
-

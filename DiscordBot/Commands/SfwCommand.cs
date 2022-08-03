@@ -1,9 +1,7 @@
 ﻿using Discord.Interactions;
-using DiscordBot.Caching;
-using DiscordBot.Filters;
-using DiscordBot.Pushshift;
+using DiscordBot.Queries;
+using DiscordBot.Services;
 using JetBrains.Annotations;
-using Microsoft.Extensions.Logging;
 
 namespace DiscordBot.Commands;
 
@@ -13,20 +11,10 @@ namespace DiscordBot.Commands;
 [UsedImplicitly]
 public class SfwCommand : BaseSearchCommand
 {
-    public SfwCommand(
-        ResultsCache cache,
-        AggregateFilter filter,
-        IHttpClientFactory httpClientFactory,
-        RepeatCommandCache repeatCommandHandler,
-        ILogger<SfwCommand> logger) : base(cache, filter, httpClientFactory, repeatCommandHandler, logger) { }
+    public SfwCommand(SfwQueryHandler queryHandler, EmoticonsHandler emoticonsHandler, RepeatCommandHandler repeatCommandHandler)
+        : base(queryHandler, emoticonsHandler, repeatCommandHandler) { }
 
     [UsedImplicitly]
     [SlashCommand("sfw", "Search for only sfw results.")]
-    public Task Execute(string query) =>
-        ExecuteInternal(query);
-
-    protected override PushshiftQuery BuildBaseQuery(string query) =>
-        new PushshiftQuery()
-            .Search(query)
-            .Sfw();
+    public Task Execute(string query) => Search(query);
 }

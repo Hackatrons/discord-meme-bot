@@ -1,0 +1,21 @@
+version: "3.9"
+
+services:
+  bot:
+    image: ${DOCKER_REGISTRY-}bot
+    container_name: bot
+    restart: always
+    # provide a stdin so we can console.readline to block
+    stdin_open: true
+    build:
+      context: .
+      dockerfile: DiscordBot/Dockerfile
+    depends_on: 
+        - redis
+    environment: 
+      - Discord__Token=${DiscordToken}
+  redis:
+    image: redis
+    container_name: cache
+    ports:
+      - "6379:6379"
