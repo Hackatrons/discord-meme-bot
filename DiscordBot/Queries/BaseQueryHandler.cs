@@ -5,6 +5,7 @@ using DiscordBot.Language;
 using DiscordBot.Models;
 using DiscordBot.Pushshift;
 using DiscordBot.Pushshift.Models;
+using DiscordBot.Threading;
 using Microsoft.Extensions.Logging;
 
 namespace DiscordBot.Queries;
@@ -65,16 +66,25 @@ public abstract class BaseQueryHandler
 
         // list of results that have already been used
         var consumed = results.Where(x => x.Consumed).ToList();
-        var remaining = new Stack<SearchResult>(results.Except(consumed));
+        var remaining = new Stack<SearchResult>(
+            results
+                .Except(consumed)
+                // put pre-primed results at the top
+                .OrderBy(x => x.Probe != null));
 
         while (remaining.TryPop(out nextResult))
         {
             // flag the result as used
             nextResult.Consumed = true;
 
-            // probe the result to determine if the url is alive
-            // as we don't want to send dead/404 links to the user
-            nextResult.Probe = await _resultProber.Probe(nextResult);
+            if (nextResult.Probe != null)
+            {
+                _logger.LogDebug("Using primed result: '{url}'", nextResult.Probe.RedirectedUrl ?? nextResult.Url);
+            }
+
+            // probe if we haven't already
+            nextResult.Probe ??= await _resultProber.Probe(nextResult);
+
             if (!nextResult.Probe.Success)
             {
                 _logger.LogDebug(
@@ -113,6 +123,9 @@ public abstract class BaseQueryHandler
         // update the cache with the consumed flags and probe results
         await _cache.Set(channelId, _typeName, query, results);
 
+        // pre-prime some results to speed up delivery
+        PrimeResults(results, channelId, query).Forget();
+
         return (nextResult, results.Count > 0 && nextResult == null);
     }
 
@@ -120,6 +133,36 @@ public abstract class BaseQueryHandler
     /// Builds a base pushshift query for the given search string.
     /// </summary>
     protected abstract PushshiftQuery BuildBaseQuery(string query);
+
+    async Task PrimeResults(IReadOnlyCollection<SearchResult> results, ulong channelId, string query)
+    {
+        // don't prime results if there are already X primed
+        const int minPrimedResults = 2;
+        // prime the next X results
+        const int numberResultsToPrime = 5;
+
+        var primedResults = results.Count(x => !x.Consumed && x.Probe != null);
+        if (primedResults >= minPrimedResults)
+            return;
+
+        // probe the next couple of results ahead of time
+        // to reduce the time it takes to return a result
+        var resultsToPrime = results
+            .Where(x => !x.Consumed && x.Probe == null)
+            .Take(numberResultsToPrime)
+            .ToList();
+
+        await Task.WhenAll(resultsToPrime
+            .Select(async x =>
+            {
+                _logger.LogDebug("Priming result: '{url}'", x.Url);
+                x.Probe = await _resultProber.Probe(x);
+                return x;
+            }));
+
+        // update the cache with the consumed flags and probe results
+        await _cache.Set(channelId, _typeName, query, results);
+    }
 
     IEnumerable<SearchResult> FilterResults(IEnumerable<SearchResult> results)
     {
