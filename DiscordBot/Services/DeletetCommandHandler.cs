@@ -69,6 +69,10 @@ public class DeleteCommandHandler : IInitialise
         {
             var message = await cachedMessage.GetOrDownloadAsync();
 
+            // small chance the message has already been deleted by someone else
+            if (message == null)
+                return;
+
             // if we are not the author of this message, then bail
             if (message.Author.Id != _client.CurrentUser.Id)
                 return;
