@@ -95,6 +95,8 @@ public abstract class BaseQueryHandler
                     nextResult.FinalUrl,
                     nextResult.Probe.HttpStatusCode?.ToString() ?? "(none)",
                     nextResult.Probe.Error ?? "(none)");
+
+                continue;
             }
 
             if (!ResultAllowed(nextResult))
@@ -115,13 +117,13 @@ public abstract class BaseQueryHandler
                     previous.FinalUrl,
                     previous.Probe?.Etag,
                     nextResult.Probe?.Etag);
+
+                continue;
             }
+
             // we have found a result to use
-            else
-            {
-                foundResult = true;
-                break;
-            }
+            foundResult = true;
+            break;
         }
 
         // update the cache with the consumed flags and probe results
