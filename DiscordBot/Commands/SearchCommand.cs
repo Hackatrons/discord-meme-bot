@@ -11,8 +11,12 @@ namespace DiscordBot.Commands;
 [UsedImplicitly]
 public class SearchCommand : BaseSearchCommand
 {
-    public SearchCommand(SearchQueryHandler queryHandler, EmoticonsHandler emoticonsHandler, RepeatCommandHandler repeatCommandHandler)
-        : base(queryHandler, emoticonsHandler, repeatCommandHandler) { }
+    public SearchCommand(
+        SearchQueryHandler queryHandler, 
+        EmoticonsHandler emoticonsHandler, 
+        RepeatCommandHandler repeatCommandHandler,
+        DeleteCommandHandler deleteCommandHandler)
+        : base(queryHandler, emoticonsHandler, repeatCommandHandler, deleteCommandHandler) { }
 
     [UsedImplicitly]
     [SlashCommand("search", "Search for anything (can include both sfw and nsfw results).")]

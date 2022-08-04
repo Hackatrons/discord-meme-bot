@@ -9,8 +9,13 @@ public interface ICache
     /// Retrieves an item from the cache, or null if it doesn't exist.
     /// </summary>
     Task<string?> Get(string key);
-    /// <summary>
 
+    /// <summary>
+    /// Retrieves an item from the cache and purges it.
+    /// </summary>
+    Task<string?> GetAndPurge(string key);
+
+    /// <summary>
     /// Sets an item in the cache.
     /// </summary>
     Task Set(string key, string value, TimeSpan? expiry = null);

@@ -21,19 +21,32 @@ public class RepeatCommandHandler : IInitialise
     readonly ICache _cache;
     readonly DiscordSocketClient _client;
     readonly EmoticonsHandler _emoticonsHandler;
+    readonly DeleteCommandHandler _deleteCommandHandler;
 
     public RepeatCommandHandler(
         DiscordSocketClient client,
         ILogger<RepeatCommandHandler> logger,
         IServiceProvider serviceProvider,
         ICache cache,
-        EmoticonsHandler emoticonsHandler)
+        EmoticonsHandler emoticonsHandler,
+        DeleteCommandHandler deleteCommandHandler)
     {
         _cache = cache.ThrowIfNull();
         _serviceProvider = serviceProvider.ThrowIfNull();
         _client = client.ThrowIfNull();
         _logger = logger.ThrowIfNull();
         _emoticonsHandler = emoticonsHandler.ThrowIfNull();
+        _deleteCommandHandler = deleteCommandHandler.ThrowIfNull();
+    }
+
+    /// <summary>
+    /// Registers a message to be watched for the repeat command.
+    /// </summary>
+    public async Task Watch(IUserMessage message, BaseQueryHandler queryHandler, string query)
+    {
+        var repeatData = new RepeatCommandData(query, queryHandler.GetType().FullName!);
+
+        await _cache.Set(message.Id.ToString(), JsonSerializer.Serialize(repeatData));
     }
 
     public void Initialise()
@@ -44,16 +57,6 @@ public class RepeatCommandHandler : IInitialise
     public void Dispose()
     {
         _client.ReactionAdded -= OnReactionAdded;
-    }
-
-    /// <summary>
-    /// Registers a message to be watched for repeating the command when a user reacts with the repeat emoticon.
-    /// </summary>
-    public async Task Watch(IUserMessage message, BaseQueryHandler queryHandler, string query)
-    {
-        var repeatData = new RepeatCommandData(query, queryHandler.GetType().FullName!);
-
-        await _cache.Set(message.Id.ToString(), JsonSerializer.Serialize(repeatData));
     }
 
     async Task OnReactionAdded(
@@ -120,7 +123,10 @@ public class RepeatCommandHandler : IInitialise
         }
 
         var message = await channel.SendMessageAsync(result.Url);
-        await _emoticonsHandler.AddResultReactions(message);
-        await Watch(message, handler, query);
+
+        await Task.WhenAll(
+            _emoticonsHandler.AddResultReactions(message),
+            Watch(message, handler, query),
+            _deleteCommandHandler.Watch(message));
     }
 }

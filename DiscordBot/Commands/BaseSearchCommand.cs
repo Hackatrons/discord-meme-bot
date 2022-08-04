@@ -14,19 +14,22 @@ public abstract class BaseSearchCommand : InteractionModuleBase<SocketInteractio
 {
     readonly EmoticonsHandler _emoticonsHandler;
     readonly RepeatCommandHandler _repeatCommandHandler;
+    readonly DeleteCommandHandler _deleteCommandHandler;
     readonly BaseQueryHandler _queryHandler;
 
     protected BaseSearchCommand(
         BaseQueryHandler queryHandler,
         EmoticonsHandler emoticonsHandler,
-        RepeatCommandHandler repeatCommandHandler)
+        RepeatCommandHandler repeatCommandHandler,
+        DeleteCommandHandler deleteCommandHandler)
     {
-        _emoticonsHandler = emoticonsHandler;
         _queryHandler = queryHandler.ThrowIfNull();
+        _emoticonsHandler = emoticonsHandler;
+        _deleteCommandHandler = deleteCommandHandler.ThrowIfNull();
         _repeatCommandHandler = repeatCommandHandler.ThrowIfNull();
     }
 
-    public async Task Search(string query) 
+    public async Task Search(string query)
     {
         // we only get 3 seconds to respond before discord times out our request
         // but we can defer the response and have up to 15mins to provide a follow up response
@@ -41,7 +44,9 @@ public abstract class BaseSearchCommand : InteractionModuleBase<SocketInteractio
         }
 
         var message = await FollowupAsync(result.Url);
-        await _emoticonsHandler.AddResultReactions(message);
-        await _repeatCommandHandler.Watch(message, _queryHandler, query);
+        await Task.WhenAll(
+            _emoticonsHandler.AddResultReactions(message),
+            _repeatCommandHandler.Watch(message, _queryHandler, query),
+            _deleteCommandHandler.Watch(message));
     }
 }

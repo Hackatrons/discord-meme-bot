@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Discord.WebSocket;
+using DiscordBot.Caching;
 using DiscordBot.Language;
 using DiscordBot.Reactions;
 using Microsoft.Extensions.Logging;
@@ -9,17 +10,28 @@ namespace DiscordBot.Services;
 /// <summary>
 /// Handler for delete commands.
 /// </summary>
-internal class DeleteCommandHandler : IInitialise
+public class DeleteCommandHandler : IInitialise
 {
     readonly ILogger _logger;
     readonly DiscordSocketClient _client;
+    readonly ICache _cache;
 
     public DeleteCommandHandler(
         DiscordSocketClient client,
+        ICache cache,
         ILogger<RepeatCommandHandler> logger)
     {
         _client = client.ThrowIfNull();
+        _cache = cache.ThrowIfNull();
         _logger = logger.ThrowIfNull();
+    }
+
+    /// <summary>
+    /// Registers a message to be watched for the delete command.
+    /// </summary>
+    public async Task Watch(IUserMessage message)
+    {
+        await _cache.Set(CacheKey(message.Id), true.ToString().ToLower());
     }
 
     public void Initialise()
@@ -44,16 +56,30 @@ internal class DeleteCommandHandler : IInitialise
         if (!Emotes.Delete.Name.Equals(reaction.Emote.Name))
             return;
 
-        var message = await cachedMessage.GetOrDownloadAsync();
+        // it's more likely that the channel has been cached than the message
+        // so it's faster to try this first
+        var deleteCacheEntry = await _cache.GetAndPurge(CacheKey(cachedMessage.Id));
+        if (!string.IsNullOrEmpty(deleteCacheEntry) && cachedChannel.HasValue)
+        {
+            var channel = await cachedChannel.GetOrDownloadAsync();
+            await channel.DeleteMessageAsync(cachedMessage.Id);
+        }
+        // channel not in our cache so fallback to downloading the message
+        else
+        {
+            var message = await cachedMessage.GetOrDownloadAsync();
 
-        // if we are not the author of this message, then bail
-        if (message.Author.Id != _client.CurrentUser.Id)
-            return;
+            // if we are not the author of this message, then bail
+            if (message.Author.Id != _client.CurrentUser.Id)
+                return;
 
-        _logger.LogInformation("Deleting message {id} at the request of {user}",
+            await message.DeleteAsync();
+        }
+
+        _logger.LogInformation("Deleted message {id} at the request of {user}",
             cachedMessage.Id,
             reaction.User.IsSpecified ? reaction.User.Value : reaction.UserId);
-
-        await message.DeleteAsync();
     }
+
+    static string CacheKey(ulong messageId) => $"CanDeleteMessage-{messageId}";
 }

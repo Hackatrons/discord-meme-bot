@@ -11,8 +11,12 @@ namespace DiscordBot.Commands;
 [UsedImplicitly]
 public class NsfwCommand : BaseSearchCommand
 {
-    public NsfwCommand(NsfwQueryHandler queryHandler,  EmoticonsHandler emoticonsHandler, RepeatCommandHandler repeatCommandHandler)
-        : base(queryHandler, emoticonsHandler, repeatCommandHandler) { }
+    public NsfwCommand(
+        NsfwQueryHandler queryHandler,  
+        EmoticonsHandler emoticonsHandler, 
+        RepeatCommandHandler repeatCommandHandler,
+        DeleteCommandHandler deleteCommandHandler)
+        : base(queryHandler, emoticonsHandler, repeatCommandHandler, deleteCommandHandler) { }
 
     [UsedImplicitly]
     [SlashCommand("nsfw", "Search for only nsfw results.")]
