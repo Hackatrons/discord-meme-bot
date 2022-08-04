@@ -72,6 +72,7 @@ public abstract class BaseQueryHandler
                 // put pre-primed results at the top
                 .OrderBy(x => x.Probe != null));
 
+        var foundResult = false;
         while (remaining.TryPop(out nextResult))
         {
             // flag the result as used
@@ -116,7 +117,11 @@ public abstract class BaseQueryHandler
                     nextResult.Probe?.Etag);
             }
             // we have found a result to use
-            else break;
+            else
+            {
+                foundResult = true;
+                break;
+            }
         }
 
         // update the cache with the consumed flags and probe results
@@ -125,7 +130,7 @@ public abstract class BaseQueryHandler
         // pre-prime some results to speed up delivery
         PrimeResults(results, channelId, query).Forget();
 
-        return (nextResult, results.Count > 0 && nextResult == null);
+        return (foundResult ? nextResult : null, results.Count > 0 && !foundResult);
     }
 
     /// <summary>
