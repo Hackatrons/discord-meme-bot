@@ -33,7 +33,7 @@ public static class EmbeddableMediaFilter
 
     public static bool ProbablyEmbeddableMedia(SearchResult result) =>
         result.MediaHint is MediaType.Video or MediaType.Audio or MediaType.Audio ||
-        ProbablyEmbeddableMedia(result.Url ?? throw new InvalidOperationException("result url cannot be null"));
+        ProbablyEmbeddableMedia(result.FinalUrl ?? throw new InvalidOperationException("result url cannot be null"));
 
     static bool ProbablyEmbeddableMedia(string url) =>
         IsMediaFile(url) ||

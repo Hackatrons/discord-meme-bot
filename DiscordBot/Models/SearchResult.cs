@@ -12,6 +12,12 @@ public record SearchResult
     /// URL of the result.
     /// </summary>
     public string Url { get; init; } = "";
+
+    /// <summary>
+    /// The probe's redirected url, otherwise the search result url.
+    /// </summary>
+    public string FinalUrl => Probe?.RedirectedUrl ?? Url;
+
     /// <summary>
     /// An optional hint to the type of media of this result.
     /// </summary>

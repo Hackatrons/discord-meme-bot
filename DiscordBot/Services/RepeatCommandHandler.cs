@@ -122,7 +122,7 @@ public class RepeatCommandHandler : IInitialise
             return;
         }
 
-        var message = await channel.SendMessageAsync(result.Url);
+        var message = await channel.SendMessageAsync(result.FinalUrl);
 
         await Task.WhenAll(
             _emoticonsHandler.AddResultReactions(message),

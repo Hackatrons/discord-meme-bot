@@ -56,7 +56,7 @@ public abstract class BaseQueryHandler
                 .ToList();
 
             // filter out unwanted results
-            results = FilterResults(newResults).ToList();
+            results = newResults.Where(FilterResult).ToList();
 
             // store the results in the cache
             await _cache.Set(channelId, _typeName, query, results);
@@ -79,7 +79,7 @@ public abstract class BaseQueryHandler
 
             if (nextResult.Probe != null)
             {
-                _logger.LogDebug("Using primed result: '{url}'", nextResult.Probe.RedirectedUrl ?? nextResult.Url);
+                _logger.LogDebug("Using primed result: '{url}'", nextResult.FinalUrl);
             }
 
             // probe if we haven't already
@@ -91,28 +91,27 @@ public abstract class BaseQueryHandler
                     "Excluding result '{url}' as the url probe was unsuccessful. " +
                     "HTTP Status Code: '{statusCode}', " +
                     "Error: '{error}'.",
-                    nextResult.Url,
+                    nextResult.FinalUrl,
                     nextResult.Probe.HttpStatusCode?.ToString() ?? "(none)",
                     nextResult.Probe.Error ?? "(none)");
             }
 
+            if (!FilterResult(nextResult))
+                continue;
+
             // check for duplicates based on the redirected url and etag
             var previous = consumed.FirstOrDefault(x =>
-                (x.Probe?.RedirectedUrl ?? x.Url) == (nextResult.Probe.RedirectedUrl ?? nextResult.Url) ||
+                string.Equals(x.FinalUrl, nextResult.FinalUrl, StringComparison.OrdinalIgnoreCase) ||
                 x.Probe?.Etag == nextResult.Probe?.Etag);
 
             if (previous != null)
             {
                 _logger.LogDebug(
                     "Excluding result '{duplicateUrl}' as it's a duplicate of '{url}'." +
-                    "Previous result redirect url: '{previousResultRedirectUrl}', " +
-                    "Duplicate result redirect url: '{duplicateResultRedirectUrl}', " +
                     "Previous result ETag : '{previousResultRedirectUrl}', " +
                     "Duplicate result ETag : '{duplicateResultRedirectUrl}'.",
-                    nextResult.Url,
-                    previous.Url,
-                    previous.Probe?.RedirectedUrl,
-                    nextResult.Probe?.RedirectedUrl,
+                    nextResult.FinalUrl,
+                    previous.FinalUrl,
                     previous.Probe?.Etag,
                     nextResult.Probe?.Etag);
             }
@@ -164,27 +163,22 @@ public abstract class BaseQueryHandler
         await _cache.Set(channelId, _typeName, query, results);
     }
 
-    IEnumerable<SearchResult> FilterResults(IEnumerable<SearchResult> results)
+    bool FilterResult(SearchResult result)
     {
-        var filtered = results.Where(x =>
+        if (!DomainBlacklistFilter.IsAllowed(result.FinalUrl))
         {
-            var allowed = DomainBlacklistFilter.IsAllowed(x.Url);
-            if (!allowed)
-                _logger.LogDebug("Excluding result {url} as the domain has been blacklisted.", x.Url);
+            _logger.LogDebug("Excluding result {url} as the domain has been blacklisted.", result.FinalUrl);
+            return false;
+        }
 
-            return allowed;
-        });
-
-        filtered = filtered.Where(x =>
+        // ReSharper disable once InvertIf
+        if (!EmbeddableMediaFilter.ProbablyEmbeddableMedia(result))
         {
-            var allowed = EmbeddableMediaFilter.ProbablyEmbeddableMedia(x);
-            if (!allowed)
-                _logger.LogDebug("Excluding result {url} as the url has been deemed as likely non-embeddable.", x.Url);
+            _logger.LogDebug("Excluding result {url} as the url has been deemed as likely non-embeddable.", result.FinalUrl);
+            return false;
+        }
 
-            return allowed;
-        });
-
-        return filtered;
+        return true;
     }
 
     async Task<IEnumerable<SearchResult>> GetResults(string query)

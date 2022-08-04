@@ -43,7 +43,7 @@ public abstract class BaseSearchCommand : InteractionModuleBase<SocketInteractio
             return;
         }
 
-        var message = await FollowupAsync(result.Url);
+        var message = await FollowupAsync(result.FinalUrl);
         await Task.WhenAll(
             _emoticonsHandler.AddResultReactions(message),
             _repeatCommandHandler.Watch(message, _queryHandler, query),
