@@ -1,7 +1,6 @@
 ﻿using DiscordBot.Configuration;
 using DiscordBot.Language;
 using DiscordBot.Models;
-using System.Text.Json;
 
 namespace DiscordBot.Caching;
 
@@ -29,8 +28,7 @@ public class ResultsCache
     {
         var key = CacheKey(channelId, commandName, arguments);
 
-        var cachedResults = await _cache.Get(key);
-        return cachedResults != null ? JsonSerializer.Deserialize<SearchResult[]>(cachedResults) : null;
+        return await _cache.Get<SearchResult[]>(key);
     }
 
     /// <summary>
@@ -43,8 +41,7 @@ public class ResultsCache
         IEnumerable<SearchResult> results)
     {
         var key = CacheKey(channelId, commandName, arguments);
-        var resultsString = JsonSerializer.Serialize(results);
-        await _cache.Set(key, resultsString, _settings.Duration);
+        await _cache.Set(key, results, _settings.Duration);
     }
 
     static string CacheKey(ulong channelId, string commandName, string arguments) =>

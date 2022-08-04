@@ -31,7 +31,7 @@ public class DeleteCommandHandler : IInitialise
     /// </summary>
     public async Task Watch(IUserMessage message)
     {
-        await _cache.Set(CacheKey(message.Id), true.ToString().ToLower());
+        await _cache.Set(CacheKey(message.Id), true);
     }
 
     public void Initialise()
@@ -58,8 +58,8 @@ public class DeleteCommandHandler : IInitialise
 
         // it's more likely that the channel has been cached than the message
         // so it's faster to try this first
-        var deleteCacheEntry = await _cache.GetAndPurge(CacheKey(cachedMessage.Id));
-        if (!string.IsNullOrEmpty(deleteCacheEntry) && cachedChannel.HasValue)
+        var isWatched = await _cache.GetAndPurge<bool?>(CacheKey(cachedMessage.Id));
+        if (isWatched.GetValueOrDefault() && cachedChannel.HasValue)
         {
             var channel = await cachedChannel.GetOrDownloadAsync();
             await channel.DeleteMessageAsync(cachedMessage.Id);

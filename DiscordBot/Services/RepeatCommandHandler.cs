@@ -5,9 +5,8 @@ using DiscordBot.Language;
 using DiscordBot.Messaging;
 using DiscordBot.Queries;
 using DiscordBot.Reactions;
-using Microsoft.Extensions.Logging;
-using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace DiscordBot.Services;
 
@@ -46,7 +45,7 @@ public class RepeatCommandHandler : IInitialise
     {
         var repeatData = new RepeatCommandData(query, queryHandler.GetType().FullName!);
 
-        await _cache.Set(message.Id.ToString(), JsonSerializer.Serialize(repeatData));
+        await _cache.Set(message.Id.ToString(), repeatData);
     }
 
     public void Initialise()
@@ -71,8 +70,8 @@ public class RepeatCommandHandler : IInitialise
         if (!Emotes.Repeat.Name.Equals(reaction.Emote.Name))
             return;
 
-        var repeatDataString = await _cache.Get(cachedMessage.Id.ToString());
-        if (string.IsNullOrEmpty(repeatDataString))
+        var repeatData = await _cache.Get<RepeatCommandData>(cachedMessage.Id.ToString());
+        if (repeatData == null)
         {
             var message = await cachedMessage.GetOrDownloadAsync();
 
@@ -85,9 +84,6 @@ public class RepeatCommandHandler : IInitialise
             await message.ReplyAsync(embed: BotMessage.NotImplemented("Sorry, unable to repeat command as I've lost the original query context."));
             return;
         }
-
-        var repeatData = JsonSerializer.Deserialize<RepeatCommandData>(repeatDataString);
-        if (repeatData == null) return;
 
         var type = Type.GetType(repeatData.Type);
         if (type == null)
