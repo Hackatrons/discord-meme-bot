@@ -56,7 +56,7 @@ public abstract class BaseQueryHandler
                 .ToList();
 
             // filter out unwanted results
-            results = newResults.Where(FilterResult).ToList();
+            results = newResults.Where(ResultAllowed).ToList();
 
             // store the results in the cache
             await _cache.Set(channelId, _typeName, query, results);
@@ -85,10 +85,10 @@ public abstract class BaseQueryHandler
             // probe if we haven't already
             nextResult.Probe ??= await _resultProber.Probe(nextResult);
 
-            if (!nextResult.Probe.Success)
+            if (!nextResult.Probe.IsAlive)
             {
                 _logger.LogDebug(
-                    "Excluding result '{url}' as the url probe was unsuccessful. " +
+                    "Excluding result '{url}' as the url probe determined the url is dead. " +
                     "HTTP Status Code: '{statusCode}', " +
                     "Error: '{error}'.",
                     nextResult.FinalUrl,
@@ -96,7 +96,7 @@ public abstract class BaseQueryHandler
                     nextResult.Probe.Error ?? "(none)");
             }
 
-            if (!FilterResult(nextResult))
+            if (!ResultAllowed(nextResult))
                 continue;
 
             // check for duplicates based on the redirected url and etag
@@ -163,7 +163,7 @@ public abstract class BaseQueryHandler
         await _cache.Set(channelId, _typeName, query, results);
     }
 
-    bool FilterResult(SearchResult result)
+    bool ResultAllowed(SearchResult result)
     {
         if (!DomainBlacklistFilter.IsAllowed(result.FinalUrl))
         {

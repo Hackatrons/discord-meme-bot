@@ -23,7 +23,7 @@ public class ResultProber
         if (!Uri.TryCreate(result.Url, UriKind.Absolute, out var uri))
             return new ProbeResult
             {
-                Success = false
+                IsAlive = false
             };
 
         using var client = _httpClientFactory.CreateClient();
@@ -35,7 +35,7 @@ public class ResultProber
 
             return new ProbeResult
             {
-                Success = response.IsSuccessStatusCode,
+                IsAlive = response.IsSuccessStatusCode,
                 // we may have followed some redirects in which case the end url is different to the original url
                 // provide the redirected url as discord doesn't seem to follow redirects
                 RedirectedUrl = response.RequestMessage?.RequestUri?.ToString(),
@@ -49,7 +49,8 @@ public class ResultProber
         {
             return new ProbeResult
             {
-                Success = false,
+                IsAlive = false,
+                HttpStatusCode = ex.StatusCode,
                 Error = ex.Message
             };
         }

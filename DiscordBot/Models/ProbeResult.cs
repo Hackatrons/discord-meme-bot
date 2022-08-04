@@ -8,9 +8,9 @@ namespace DiscordBot.Models;
 public record ProbeResult
 {
     /// <summary>
-    /// The result of the probe.
+    /// When the URL is alive and returns a successful HTTP response.
     /// </summary>
-    public bool Success { get; init; }
+    public bool IsAlive { get; init; }
     /// <summary>
     /// The HTTP response status code.
     /// </summary>
