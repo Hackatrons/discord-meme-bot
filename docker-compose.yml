@@ -10,12 +10,12 @@ services:
     build:
       context: .
       dockerfile: DiscordBot/Dockerfile
-    depends_on: 
+    depends_on:
         - redis
-    environment: 
+    environment:
       - Discord__Token=${DiscordToken}
   redis:
     image: redis
     container_name: meme-bot-cache
-    ports:
+    expose:
       - "6379:6379"
