@@ -8,6 +8,7 @@ public class Preview
 {
     [JsonPropertyName("enabled")]
     public bool? Enabled { get; set; }
+
     [JsonPropertyName("reddit_video_preview")]
     public RedditVideoPreview? RedditVideoPreview { get; set; }
 }

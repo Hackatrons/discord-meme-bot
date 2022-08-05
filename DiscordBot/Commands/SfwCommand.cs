@@ -13,10 +13,9 @@ public class SfwCommand : BaseSearchCommand
 {
     public SfwCommand(
         SfwQueryHandler queryHandler, 
-        EmoticonsHandler emoticonsHandler, 
         RepeatCommandHandler repeatCommandHandler,
         DeleteCommandHandler deleteCommandHandler)
-        : base(queryHandler, emoticonsHandler, repeatCommandHandler, deleteCommandHandler) { }
+        : base(queryHandler, repeatCommandHandler, deleteCommandHandler) { }
 
     [UsedImplicitly]
     [SlashCommand("sfw", "Search for only sfw results.")]

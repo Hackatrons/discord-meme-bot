@@ -1,6 +1,7 @@
 ﻿using Discord;
 using Discord.WebSocket;
 using DiscordBot.Caching;
+using DiscordBot.Configuration;
 using DiscordBot.Language;
 using DiscordBot.Reactions;
 using Microsoft.Extensions.Logging;
@@ -12,6 +13,7 @@ namespace DiscordBot.Services;
 /// </summary>
 public class DeleteCommandHandler : IInitialise
 {
+    readonly CacheSettings _cacheSettings;
     readonly ILogger _logger;
     readonly DiscordSocketClient _client;
     readonly ICache _cache;
@@ -19,10 +21,12 @@ public class DeleteCommandHandler : IInitialise
     public DeleteCommandHandler(
         DiscordSocketClient client,
         ICache cache,
+        CacheSettings cacheSettings,
         ILogger<RepeatCommandHandler> logger)
     {
         _client = client.ThrowIfNull();
         _cache = cache.ThrowIfNull();
+        _cacheSettings = cacheSettings.ThrowIfNull();
         _logger = logger.ThrowIfNull();
     }
 
@@ -31,7 +35,7 @@ public class DeleteCommandHandler : IInitialise
     /// </summary>
     public async Task Watch(IUserMessage message)
     {
-        await _cache.Set(CacheKey(message.Id), true);
+        await _cache.Set(CacheKey(message.Id), true, _cacheSettings.Duration);
     }
 
     public void Initialise()
@@ -59,9 +63,11 @@ public class DeleteCommandHandler : IInitialise
         // it's more likely that the channel has been cached than the message
         // so it's faster to try this first
         var isWatched = await _cache.GetAndPurge<bool?>(CacheKey(cachedMessage.Id));
+
         if (isWatched.GetValueOrDefault() && cachedChannel.HasValue)
         {
             var channel = await cachedChannel.GetOrDownloadAsync();
+
             await channel.DeleteMessageAsync(cachedMessage.Id);
         }
         // channel not in our cache so fallback to downloading the message

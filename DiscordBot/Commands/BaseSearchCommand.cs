@@ -2,7 +2,9 @@
 using DiscordBot.Language;
 using DiscordBot.Messaging;
 using DiscordBot.Queries;
+using DiscordBot.Reactions;
 using DiscordBot.Services;
+using DiscordBot.Threading;
 
 namespace DiscordBot.Commands;
 
@@ -12,19 +14,16 @@ namespace DiscordBot.Commands;
 /// </summary>
 public abstract class BaseSearchCommand : InteractionModuleBase<SocketInteractionContext>
 {
-    readonly EmoticonsHandler _emoticonsHandler;
     readonly RepeatCommandHandler _repeatCommandHandler;
     readonly DeleteCommandHandler _deleteCommandHandler;
-    readonly BaseQueryHandler _queryHandler;
+    readonly QueryHandler _queryHandler;
 
     protected BaseSearchCommand(
-        BaseQueryHandler queryHandler,
-        EmoticonsHandler emoticonsHandler,
+        QueryHandler queryHandler,
         RepeatCommandHandler repeatCommandHandler,
         DeleteCommandHandler deleteCommandHandler)
     {
         _queryHandler = queryHandler.ThrowIfNull();
-        _emoticonsHandler = emoticonsHandler;
         _deleteCommandHandler = deleteCommandHandler.ThrowIfNull();
         _repeatCommandHandler = repeatCommandHandler.ThrowIfNull();
     }
@@ -44,8 +43,12 @@ public abstract class BaseSearchCommand : InteractionModuleBase<SocketInteractio
         }
 
         var message = await FollowupAsync(result.FinalUrl);
+
+        // adding reactions is slow, and we don't want to wait for it
+        // so just fire it off in a background thread
+        Emotes.AddResultReactions(message).Forget();
+
         await Task.WhenAll(
-            _emoticonsHandler.AddResultReactions(message),
             _repeatCommandHandler.Watch(message, _queryHandler, query),
             _deleteCommandHandler.Watch(message));
     }

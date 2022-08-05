@@ -13,7 +13,7 @@ namespace DiscordBot.Queries;
 /// <summary>
 /// Base class for search queries.
 /// </summary>
-public abstract class BaseQueryHandler
+public abstract class QueryHandler
 {
     // pushshift has a hard limit of 100
     const int SearchResultLimit = 100;
@@ -24,7 +24,7 @@ public abstract class BaseQueryHandler
     readonly ILogger _logger;
     readonly ResultProber _resultProber;
 
-    protected BaseQueryHandler(
+    protected QueryHandler(
         ResultsCache cache,
         ResultProber resultProber,
         IHttpClientFactory httpClientFactory,
@@ -43,61 +43,41 @@ public abstract class BaseQueryHandler
     /// </summary>
     public async Task<(SearchResult? Result, bool Finished)> SearchNext(string query, ulong channelId)
     {
-        var results = await _cache.Get(
-            channelId,
-            _typeName,
-            query);
+        var results = await _cache.Get(channelId, _typeName, query);
 
-        if (results == null || results.Count == 0)
+        if (results == null || !results.Any())
         {
-            var newResults = (await GetResults(query))
+            results = (await GetResults(query))
+                // filter out unwanted results
+                .Where(ResultAllowed)
                 // randomise the result set
                 .Shuffle()
                 .ToList();
-
-            // filter out unwanted results
-            results = newResults.Where(ResultAllowed).ToList();
 
             // store the results in the cache
             await _cache.Set(channelId, _typeName, query, results);
         }
 
-        SearchResult? nextResult;
-
         // list of results that have already been used
         var consumed = results.Where(x => x.Consumed).ToList();
-        var remaining = new Stack<SearchResult>(
-            results
-                .Except(consumed)
-                // put pre-primed results at the top
-                .OrderBy(x => x.Probe != null));
+        var remaining = new Stack<SearchResult>(results
+            .Except(consumed)
+            // put pre-primed results at the top
+            .OrderBy(x => x.Probe != null));
 
+        SearchResult? nextResult;
         var foundResult = false;
+
         while (remaining.TryPop(out nextResult))
         {
             // flag the result as used
             nextResult.Consumed = true;
 
             if (nextResult.Probe != null)
-            {
                 _logger.LogDebug("Using primed result: '{url}'", nextResult.FinalUrl);
-            }
 
             // probe if we haven't already
             nextResult.Probe ??= await _resultProber.Probe(nextResult);
-
-            if (!nextResult.Probe.IsAlive)
-            {
-                _logger.LogDebug(
-                    "Excluding result '{url}' as the url probe determined the url is dead. " +
-                    "HTTP Status Code: '{statusCode}', " +
-                    "Error: '{error}'.",
-                    nextResult.FinalUrl,
-                    nextResult.Probe.HttpStatusCode?.ToString() ?? "(none)",
-                    nextResult.Probe.Error ?? "(none)");
-
-                continue;
-            }
 
             if (!ResultAllowed(nextResult))
                 continue;
@@ -147,16 +127,15 @@ public abstract class BaseQueryHandler
         // prime the next X results
         const int numberResultsToPrime = 5;
 
-        var primedResults = results.Count(x => !x.Consumed && x.Probe != null);
-        if (primedResults >= minPrimedResults)
+        var primedResultsCount = results.Count(x => !x.Consumed && x.Probe != null);
+        if (primedResultsCount >= minPrimedResults)
             return;
 
         // probe the next couple of results ahead of time
         // to reduce the time it takes to return a result
         var resultsToPrime = results
             .Where(x => !x.Consumed && x.Probe == null)
-            .Take(numberResultsToPrime)
-            .ToList();
+            .Take(numberResultsToPrime);
 
         await Task.WhenAll(resultsToPrime
             .Select(async x =>
@@ -174,14 +153,27 @@ public abstract class BaseQueryHandler
     {
         if (!DomainBlacklistFilter.IsAllowed(result.FinalUrl))
         {
-            _logger.LogDebug("Excluding result {url} as the domain has been blacklisted.", result.FinalUrl);
+            _logger.LogDebug("Excluding result '{url}' as the domain has been blacklisted.", result.FinalUrl);
+            return false;
+        }
+
+        if (!EmbeddableMediaFilter.ProbablyEmbeddableMedia(result))
+        {
+            _logger.LogDebug("Excluding result '{url}' as the url has been deemed as likely non-embeddable.", result.FinalUrl);
             return false;
         }
 
         // ReSharper disable once InvertIf
-        if (!EmbeddableMediaFilter.ProbablyEmbeddableMedia(result))
+        if (result.Probe is { IsAlive: false })
         {
-            _logger.LogDebug("Excluding result {url} as the url has been deemed as likely non-embeddable.", result.FinalUrl);
+            _logger.LogDebug(
+                "Excluding result '{url}' as the url probe determined the url is dead. " +
+                "HTTP Status Code: '{statusCode}', " +
+                "Error: '{error}'.",
+                result.FinalUrl,
+                result.Probe.HttpStatusCode?.ToString() ?? "(none)",
+                result.Probe.Error ?? "(none)");
+
             return false;
         }
 

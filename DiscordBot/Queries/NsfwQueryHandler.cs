@@ -10,7 +10,7 @@ namespace DiscordBot.Queries;
 /// A search query for NSFW content.
 /// </summary>
 [UsedImplicitly]
-public class NsfwQueryHandler : BaseQueryHandler
+public class NsfwQueryHandler : QueryHandler
 {
     public NsfwQueryHandler(
         ResultsCache cache,

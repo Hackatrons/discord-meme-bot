@@ -11,11 +11,7 @@ public static class UrlRegex
         RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
     public static IEnumerable<string> Match(string text)
-    {
-        text.ThrowIfNull();
-
-        return UrlMatchRegex
-            .Matches(text)
+        => UrlMatchRegex
+            .Matches(text.ThrowIfNull())
             .Select(x => x.Value);
-    }
 }

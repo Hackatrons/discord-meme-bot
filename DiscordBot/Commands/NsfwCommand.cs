@@ -13,10 +13,9 @@ public class NsfwCommand : BaseSearchCommand
 {
     public NsfwCommand(
         NsfwQueryHandler queryHandler,  
-        EmoticonsHandler emoticonsHandler, 
         RepeatCommandHandler repeatCommandHandler,
         DeleteCommandHandler deleteCommandHandler)
-        : base(queryHandler, emoticonsHandler, repeatCommandHandler, deleteCommandHandler) { }
+        : base(queryHandler, repeatCommandHandler, deleteCommandHandler) { }
 
     [UsedImplicitly]
     [SlashCommand("nsfw", "Search for only nsfw results.")]

@@ -12,11 +12,13 @@ public record PushshiftResult
     /// </summary>
     [JsonPropertyName("url")]
     public string? Url { get; init; }
+
     /// <summary>
     /// A hint of the type of media at the target URL.
     /// </summary>
     [JsonPropertyName("post_hint")]
     public string? PostHint { get; init; }
+
     /// <summary>
     /// True if the URL is a reddit text post, otherwise false if it's an external link.
     /// e.g.
@@ -25,11 +27,13 @@ public record PushshiftResult
     /// </summary>
     [JsonPropertyName("is_self")]
     public bool? IsSelf { get; set; }
+
     /// <summary>
     /// Text of the reddit submission.
     /// </summary>
     [JsonPropertyName("selftext")]
     public string? Selftext { get; set; }
+
     [JsonPropertyName("preview")]
     public Preview? Preview { get; set; }
 }

@@ -70,6 +70,5 @@ internal class Bot : IAsyncDisposable
     /// <summary>
     /// Disposes the bot.
     /// </summary>
-    public async ValueTask DisposeAsync() => 
-        await StopAsync();
+    public async ValueTask DisposeAsync() => await StopAsync();
 }

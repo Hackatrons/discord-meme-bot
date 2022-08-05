@@ -23,17 +23,4 @@ internal static class BotMessage
                 x.Value = details;
             })
             .Build();
-
-    /// <summary>
-    /// Returns a non-implemented message embed from the specified message.
-    /// </summary>
-    public static Embed NotImplemented(string message)
-        => new EmbedBuilder()
-            .WithColor(BotColours.NotImplemented)
-            .AddField(x =>
-            {
-                x.Name = "Not Implemented";
-                x.Value = message;
-            })
-            .Build();
 }

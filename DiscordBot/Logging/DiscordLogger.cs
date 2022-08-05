@@ -2,9 +2,10 @@
 using Discord.Interactions;
 using Discord.WebSocket;
 using DiscordBot.Language;
+using DiscordBot.Services;
 using Microsoft.Extensions.Logging;
 
-namespace DiscordBot.Services;
+namespace DiscordBot.Logging;
 
 /// <summary>
 /// Logging handler for discord services.
@@ -33,7 +34,7 @@ internal class DiscordLogger : IInitialise
     }
 
     Task OnSlashCommandExecuted(
-        SlashCommandInfo command,
+        SlashCommandInfo? command,
         IInteractionContext context,
         IResult result)
     {
@@ -44,7 +45,7 @@ internal class DiscordLogger : IInitialise
         {
             _logger.LogInformation(
                 "Executed command '{name}' with parameters '{params}' for user '{user}'",
-                command.Name,
+                command!.Name,
                 parametersMessage,
                 context.User.Username);
         }

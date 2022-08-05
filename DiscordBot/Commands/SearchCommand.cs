@@ -13,10 +13,9 @@ public class SearchCommand : BaseSearchCommand
 {
     public SearchCommand(
         SearchQueryHandler queryHandler, 
-        EmoticonsHandler emoticonsHandler, 
         RepeatCommandHandler repeatCommandHandler,
         DeleteCommandHandler deleteCommandHandler)
-        : base(queryHandler, emoticonsHandler, repeatCommandHandler, deleteCommandHandler) { }
+        : base(queryHandler, repeatCommandHandler, deleteCommandHandler) { }
 
     [UsedImplicitly]
     [SlashCommand("search", "Search for anything (can include both sfw and nsfw results).")]

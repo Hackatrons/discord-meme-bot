@@ -10,7 +10,7 @@ namespace DiscordBot.Queries;
 /// A search query for general content (can be both sfw and nsfw).
 /// </summary>
 [UsedImplicitly]
-public class SearchQueryHandler : BaseQueryHandler
+public class SearchQueryHandler : QueryHandler
 {
     public SearchQueryHandler(
         ResultsCache cache,
