@@ -38,7 +38,7 @@ public abstract class BaseSearchCommand : InteractionModuleBase<SocketInteractio
         var (result, finished) = await _queryHandler.SearchNext(query, Context.Channel.Id);
         if (result == null)
         {
-            await FollowupAsync(finished ? BotMessage.NoMoreResultsMessage : BotMessage.NoResultsMessage);
+            await FollowupAsync(embed: finished ? BotMessage.NoMoreResults(query) : BotMessage.NoResults(query));
             return;
         }
 

@@ -113,7 +113,7 @@ public class RepeatCommandHandler : IInitialise
         var (result, finished) = await handler.SearchNext(query, channel.Id);
         if (result == null)
         {
-            await channel.SendMessageAsync(finished ? BotMessage.NoMoreResultsMessage : BotMessage.NoResultsMessage);
+            await channel.SendMessageAsync(embed: finished ? BotMessage.NoMoreResults(query) : BotMessage.NoResults(query));
             return;
         }
 
