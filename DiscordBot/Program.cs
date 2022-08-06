@@ -1,4 +1,5 @@
-﻿using System.Runtime.Loader;
+﻿using System.Runtime.InteropServices;
+using System.Runtime.Loader;
 using DiscordBot;
 
 try
@@ -9,6 +10,7 @@ try
     AssemblyLoadContext.Default.Unloading += _ => runToken.Cancel();
     AppDomain.CurrentDomain.ProcessExit += (_, _) => runToken.Cancel();
     Console.CancelKeyPress += (_, _) => runToken.Cancel();
+    _ = PosixSignalRegistration.Create(PosixSignal.SIGTERM, _ => runToken.Cancel());
 
     var startup = new Startup();
 
