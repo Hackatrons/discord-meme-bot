@@ -16,4 +16,4 @@ services:
     image: redis
     container_name: meme-bot-cache
     expose:
-      - "6379:6379"
+      - 6379
