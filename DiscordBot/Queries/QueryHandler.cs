@@ -85,7 +85,7 @@ public abstract class QueryHandler
             // check for duplicates based on the redirected url and etag
             var previous = consumed.FirstOrDefault(x =>
                 string.Equals(x.FinalUrl, nextResult.FinalUrl, StringComparison.OrdinalIgnoreCase) ||
-                x.Probe?.Etag == nextResult.Probe?.Etag);
+                (x.Probe?.Etag != null && nextResult.Probe?.Etag != null && string.Equals(x.Probe.Etag, nextResult.Probe.Etag, StringComparison.OrdinalIgnoreCase)));
 
             if (previous != null)
             {
