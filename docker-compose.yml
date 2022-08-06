@@ -12,8 +12,16 @@ services:
         - redis
     environment:
       - Discord__Token=${DiscordToken}
+
   redis:
     image: redis
     container_name: meme-bot-cache
+    volumes:
+      - data:/data
     expose:
       - 6379
+
+volumes:
+  data:
+    name: meme-bot-cache-volume
+    external: false
