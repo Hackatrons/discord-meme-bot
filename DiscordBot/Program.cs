@@ -4,6 +4,8 @@ using DiscordBot;
 
 try
 {
+    Console.WriteLine("Starting...");
+
     var runToken = new CancellationTokenSource();
 
     // kill signal listeners
@@ -23,6 +25,8 @@ try
         await Task.Delay(Timeout.Infinite, runToken.Token);
     }
     catch (TaskCanceledException) { }
+
+    Console.WriteLine("Stopping...");
 
     // stop the app
     await startup.StopAsync();
