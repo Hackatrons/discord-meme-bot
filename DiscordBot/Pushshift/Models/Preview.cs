@@ -4,11 +4,11 @@ using System.Text.Json.Serialization;
 
 namespace DiscordBot.Pushshift.Models;
 
-public class Preview
+public record Preview
 {
     [JsonPropertyName("enabled")]
-    public bool? Enabled { get; set; }
+    public bool? Enabled { get; init; }
 
     [JsonPropertyName("reddit_video_preview")]
-    public RedditVideoPreview? RedditVideoPreview { get; set; }
+    public RedditVideoPreview? RedditVideoPreview { get; init; }
 }

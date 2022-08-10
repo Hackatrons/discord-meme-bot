@@ -2,8 +2,8 @@ using System.Text.Json.Serialization;
 
 namespace DiscordBot.Pushshift.Models;
 
-public class RedditVideoPreview
+public record RedditVideoPreview
 {
     [JsonPropertyName("fallback_url")]
-    public string? FallbackUrl { get; set; }
+    public string? FallbackUrl { get; init; }
 }

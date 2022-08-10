@@ -26,14 +26,14 @@ public record PushshiftResult
     /// - For http://something.com is, IsSelf will be false
     /// </summary>
     [JsonPropertyName("is_self")]
-    public bool? IsSelf { get; set; }
+    public bool? IsSelf { get; init; }
 
     /// <summary>
     /// Text of the reddit submission.
     /// </summary>
     [JsonPropertyName("selftext")]
-    public string? Selftext { get; set; }
+    public string? Selftext { get; init; }
 
     [JsonPropertyName("preview")]
-    public Preview? Preview { get; set; }
+    public Preview? Preview { get; init; }
 }

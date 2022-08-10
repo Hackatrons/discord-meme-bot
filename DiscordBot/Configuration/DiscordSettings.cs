@@ -12,6 +12,7 @@ public record DiscordSettings
     /// </summary>
     [Required]
     public string? Token { get; init; }
+
     /// <summary>
     /// The invitation link for a user to add this bot to a server.
     /// </summary>

@@ -3,7 +3,7 @@
 /// <summary>
 /// Extension methods for configuration classes.
 /// </summary>
-internal class Config
+internal static class Config
 {
     /// <summary>
     /// Returns the configuration section name for a configuration class type.
