@@ -166,9 +166,9 @@ public abstract class QueryHandler
 
     bool ResultAllowed(SearchResult result)
     {
-        if (!DomainBlacklistFilter.IsAllowed(result.FinalUrl))
+        if (!RedditVideoDomainFilter.IsAllowed(result.FinalUrl))
         {
-            _logger.LogDebug("Excluding result '{url}' as the domain has been blacklisted.", result.FinalUrl);
+            _logger.LogDebug("Excluding result '{url}' as it's a reddit video that's not embeddable.", result.FinalUrl);
             return false;
         }
 

@@ -3,17 +3,11 @@
 namespace DiscordBot.Filters;
 
 /// <summary>
-/// Determines if a url matches against a set of blacklisted domains.
+/// Disallows non-embeddable reddit videos.
 /// </summary>
-public static class DomainBlacklistFilter
+public static class RedditVideoDomainFilter
 {
     const string RedditVideoHost = "v.redd.it";
-
-    static readonly string[] BlacklistDomains =
-    {
-        // not media
-        "reddit.com"
-    };
 
     public static bool IsAllowed(string url)
     {
@@ -21,7 +15,7 @@ public static class DomainBlacklistFilter
             return false;
 
         if (!url.ContainsIgnoreCase(RedditVideoHost))
-            return !BlacklistDomains.Any(url.ContainsIgnoreCase);
+            return true;
 
         // can't embed v.redd.it links
         // however if we've been provided with a direct link to a dash video or audio file
