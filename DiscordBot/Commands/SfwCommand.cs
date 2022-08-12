@@ -19,5 +19,5 @@ public class SfwCommand : BaseSearchCommand
 
     [UsedImplicitly]
     [SlashCommand("sfw", "Search for only sfw results.")]
-    public Task Execute(string query) => Search(query);
+    public async Task Execute(string query) => await Search(query);
 }

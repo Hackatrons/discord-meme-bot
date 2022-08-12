@@ -19,5 +19,5 @@ public class SearchCommand : BaseSearchCommand
 
     [UsedImplicitly]
     [SlashCommand("search", "Search for anything (can include both sfw and nsfw results).")]
-    public Task Execute(string query) => Search(query);
+    public async Task Execute(string query) => await Search(query);
 }

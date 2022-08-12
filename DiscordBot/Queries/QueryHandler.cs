@@ -26,7 +26,7 @@ public abstract class QueryHandler
         ResultProber resultProber,
         ILogger logger)
     {
-        _queryMultiplexer = queryMultiplexer;
+        _queryMultiplexer = queryMultiplexer.ThrowIfNull();
         _resultProber = resultProber.ThrowIfNull();
         _cache = cache.ThrowIfNull();
         _typeName = GetType().Name;
