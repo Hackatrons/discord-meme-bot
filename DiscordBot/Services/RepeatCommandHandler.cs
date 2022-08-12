@@ -41,7 +41,7 @@ public class RepeatCommandHandler : IInitialise
     /// </summary>
     public async Task Watch(IUserMessage message, QueryHandler queryHandler, string query)
     {
-        var repeatData = new RepeatCommandData(query, queryHandler.GetType().FullName!);
+        var repeatData = new RepeatCommandData(queryHandler.GetType().FullName!, query);
 
         await _cache.Set(message.Id.ToString(), repeatData);
     }
