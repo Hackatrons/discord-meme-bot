@@ -18,6 +18,7 @@ public class PushshiftQuery
 
     readonly List<string> _subreddits = new();
     readonly List<string> _fields = new();
+    readonly List<string> _postHints = new();
     int? _limit;
     string? _query;
     string? _title;
@@ -33,6 +34,15 @@ public class PushshiftQuery
     public PushshiftQuery Subreddits(params string[] subreddits)
     {
         _subreddits.AddRange(subreddits.ThrowIfNull());
+        return this;
+    }
+
+    /// <summary>
+    /// Filters based on the post hint.
+    /// </summary>
+    public PushshiftQuery PostHints(params string[] postHints)
+    {
+        _postHints.AddRange(postHints.ThrowIfNull());
         return this;
     }
 
@@ -158,7 +168,8 @@ public class PushshiftQuery
 
         if (!string.IsNullOrEmpty(_query)) parameters.Add("q", _query);
         if (!string.IsNullOrEmpty(_title)) parameters.Add("title", _title);
-        if (_subreddits.Count > 0) parameters.Add("subreddit", string.Join(",", _subreddits));
+        if (_subreddits.Any()) parameters.Add("subreddit", string.Join(",", _subreddits));
+        if (_postHints.Any()) parameters.Add("post_hint", string.Join("|", _postHints));
         if (_nsfw.HasValue) parameters.Add("over_18", _nsfw.Value.ToString().ToLowerInvariant());
 
         if (_scoreFilterType.HasValue)
@@ -203,29 +214,6 @@ public class PushshiftQuery
         builder.Port = -1;
 
         return builder.Uri;
-    }
-
-    /// <summary>
-    /// Returns a new instance with all the settings copied.
-    /// </summary>
-    public PushshiftQuery Clone()
-    {
-        var cloned = new PushshiftQuery
-        {
-            _limit = _limit,
-            _nsfw = _nsfw,
-            _sort = _sort,
-            _scoreFilter = _scoreFilter,
-            _title = _title,
-            _query = _query,
-            _sortDirection = _sortDirection,
-            _scoreFilterType = _scoreFilterType
-        };
-
-        cloned._fields.AddRange(_fields);
-        cloned._subreddits.AddRange(_subreddits);
-
-        return cloned;
     }
 
     /// <summary>

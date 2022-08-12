@@ -215,4 +215,14 @@ public class PushshiftUrlTest
                 .Fields(new[] { "a", "b" })
                 .ToString());
     }
+
+    [TestMethod]
+    public void QueryWithPostHintsReturnsCorrectUrl()
+    {
+        Assert.AreEqual("https://api.pushshift.io/reddit/search/submission/?q=asdf&post_hint=a|b:c|d",
+            new PushshiftQuery()
+                .Search("asdf")
+                .PostHints("a", "b:c", "d")
+                .ToString());
+    }
 }

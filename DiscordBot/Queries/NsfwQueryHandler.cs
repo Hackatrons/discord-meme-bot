@@ -13,13 +13,11 @@ namespace DiscordBot.Queries;
 public class NsfwQueryHandler : QueryHandler
 {
     public NsfwQueryHandler(
+        QueryMultiplexer queryMultiplexer,
         ResultsCache cache,
         ResultProber resultsProber,
-        IHttpClientFactory httpClientFactory,
-        ILogger<NsfwQueryHandler> logger) : base(cache, resultsProber, httpClientFactory, logger) { }
+        ILogger<NsfwQueryHandler> logger) : base(queryMultiplexer, cache, resultsProber, logger) { }
 
-    protected override PushshiftQuery BuildBaseQuery(string query) =>
-        new PushshiftQuery()
-            .Search(query)
-            .Nsfw();
+    protected override PushshiftQuery ConfigureQuery(PushshiftQuery query)
+        => query.Nsfw();
 }

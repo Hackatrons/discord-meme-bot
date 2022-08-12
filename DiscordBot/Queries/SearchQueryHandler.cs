@@ -13,12 +13,11 @@ namespace DiscordBot.Queries;
 public class SearchQueryHandler : QueryHandler
 {
     public SearchQueryHandler(
+        QueryMultiplexer queryMultiplexer,
         ResultsCache cache,
         ResultProber resultsProber,
-        IHttpClientFactory httpClientFactory,
-        ILogger<SearchQueryHandler> logger) : base(cache, resultsProber, httpClientFactory, logger) { }
+        ILogger<SearchQueryHandler> logger) : base(queryMultiplexer, cache, resultsProber, logger) { }
 
-    protected override PushshiftQuery BuildBaseQuery(string query) =>
-        new PushshiftQuery()
-            .Search(query);
+    protected override PushshiftQuery ConfigureQuery(PushshiftQuery query)
+        => query;
 }

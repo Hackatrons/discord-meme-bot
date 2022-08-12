@@ -19,21 +19,6 @@ public record PushshiftResult
     [JsonPropertyName("post_hint")]
     public string? PostHint { get; init; }
 
-    /// <summary>
-    /// True if the URL is a reddit text post, otherwise false if it's an external link.
-    /// e.g.
-    /// - For http://reddit.com/r/something/123 IsSelf will be true
-    /// - For http://something.com is, IsSelf will be false
-    /// </summary>
-    [JsonPropertyName("is_self")]
-    public bool? IsSelf { get; init; }
-
-    /// <summary>
-    /// Text of the reddit submission.
-    /// </summary>
-    [JsonPropertyName("selftext")]
-    public string? Selftext { get; init; }
-
     [JsonPropertyName("preview")]
     public Preview? Preview { get; init; }
 }

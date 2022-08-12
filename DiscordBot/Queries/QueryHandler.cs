@@ -4,35 +4,31 @@ using DiscordBot.Filters;
 using DiscordBot.Language;
 using DiscordBot.Models;
 using DiscordBot.Pushshift;
-using DiscordBot.Pushshift.Models;
 using DiscordBot.Threading;
 using Microsoft.Extensions.Logging;
 
 namespace DiscordBot.Queries;
 
 /// <summary>
-/// Base class for search queries.
+/// Orchestrates sendings queries to Pushshift, filtering, caching, and priming.
 /// </summary>
 public abstract class QueryHandler
 {
-    // pushshift has a hard limit of 100
-    const int SearchResultLimit = 100;
-
+    readonly QueryMultiplexer _queryMultiplexer;
     readonly ResultsCache _cache;
-    readonly IHttpClientFactory _httpClientFactory;
     readonly string _typeName;
     readonly ILogger _logger;
     readonly ResultProber _resultProber;
 
     protected QueryHandler(
+        QueryMultiplexer queryMultiplexer,
         ResultsCache cache,
         ResultProber resultProber,
-        IHttpClientFactory httpClientFactory,
         ILogger logger)
     {
+        _queryMultiplexer = queryMultiplexer;
         _resultProber = resultProber.ThrowIfNull();
         _cache = cache.ThrowIfNull();
-        _httpClientFactory = httpClientFactory.ThrowIfNull();
         _typeName = GetType().Name;
         _logger = logger.ThrowIfNull();
     }
@@ -43,20 +39,7 @@ public abstract class QueryHandler
     /// </summary>
     public async Task<(SearchResult? Result, bool Finished)> SearchNext(string query, ulong channelId)
     {
-        var results = await _cache.Get(channelId, _typeName, query);
-
-        if (results == null || !results.Any())
-        {
-            results = (await GetResults(query))
-                // filter out unwanted results
-                .Where(ResultAllowed)
-                // randomise the result set
-                .Shuffle()
-                .ToList();
-
-            // store the results in the cache
-            await _cache.Set(channelId, _typeName, query, results);
-        }
+        var results = await GetResults(query, channelId);
 
         // list of results that have already been used
         var consumed = results.Where(x => x.Consumed).ToList();
@@ -116,9 +99,41 @@ public abstract class QueryHandler
     }
 
     /// <summary>
-    /// Builds a base pushshift query for the given search string.
+    /// Configures the pushshift query with any filters/settings for this query type.
     /// </summary>
-    protected abstract PushshiftQuery BuildBaseQuery(string query);
+    protected abstract PushshiftQuery ConfigureQuery(PushshiftQuery query);
+
+    async Task<IReadOnlyCollection<SearchResult>> GetResults(string query, ulong channelId)
+    {
+        var results = await _cache.Get(channelId, _typeName, query);
+
+        if (results != null && results.Any())
+            return results;
+
+        var unfiltered = (await _queryMultiplexer.GetResults(query, ConfigureQuery)).ToList();
+
+        _logger.LogInformation("Found {count} results for query '{query}'.", unfiltered.Count, query);
+
+        var filtered = unfiltered
+            // filter out unwanted results
+            .Where(ResultAllowed)
+            .ToList();
+
+        _logger.LogInformation("{remaining}/{total} results remain after filtering for query '{query}'.", filtered.Count, unfiltered.Count, query);
+
+        results = filtered
+            // randomise the result set
+            .Shuffle()
+            // put the most likely embeddables at the top
+            // (note this is possible after randomisation because OrderBy is a stable sort)
+            .OrderBy(EmbeddableMediaFilter.ProbablyEmbeddableMedia)
+            .ToList();
+
+        // store the results in the cache
+        await _cache.Set(channelId, _typeName, query, results);
+
+        return results;
+    }
 
     async Task PrimeResults(IReadOnlyCollection<SearchResult> results, ulong channelId, string query)
     {
@@ -157,12 +172,6 @@ public abstract class QueryHandler
             return false;
         }
 
-        if (!EmbeddableMediaFilter.ProbablyEmbeddableMedia(result))
-        {
-            _logger.LogDebug("Excluding result '{url}' as the url has been deemed as likely non-embeddable.", result.FinalUrl);
-            return false;
-        }
-
         // ReSharper disable once InvertIf
         if (result.Probe is { IsAlive: false })
         {
@@ -178,61 +187,5 @@ public abstract class QueryHandler
         }
 
         return true;
-    }
-
-    async Task<IEnumerable<SearchResult>> GetResults(string query)
-    {
-        using var httpClient = _httpClientFactory.CreateClient();
-
-        var baseQuery = BuildBaseQuery(query);
-
-        // mix 2 search results in together:
-        // 1. ordered by highest score
-        // 2. ordered by most recent
-        // probably a good mixture of results
-        var mostRecentTask = baseQuery
-            .Clone()
-            .Limit(SearchResultLimit)
-            .Sort(SortType.CreatedDate, SortDirection.Descending)
-            .Fields<PushshiftResult>()
-            .Execute(httpClient);
-
-        var highestScoreTask = baseQuery
-            .Clone()
-            .Limit(SearchResultLimit)
-            .Sort(SortType.Score, SortDirection.Descending)
-            .Fields<PushshiftResult>()
-            .Execute(httpClient);
-
-        await Task.WhenAll(mostRecentTask, highestScoreTask);
-
-        var mostRecent = (await mostRecentTask).ToList();
-        var highestScore = (await highestScoreTask).ToList();
-
-        // merge the result sets
-        var combined = mostRecent
-            .UnionBy(highestScore, x => x.Url)
-            // filter out reddit self posts
-            .Where(x => !x.IsSelf.GetValueOrDefault());
-
-        // extract any additional results from reddit posts
-        var additionalResults = mostRecent
-            .SelectMany(x => x.ExtractUrls())
-            .UnionBy(highestScore.SelectMany(x => x.ExtractUrls()), x => x.Url)
-            .ToList();
-
-        // merge the additional results in
-        // the final result be unique by url
-        var results = combined
-            .Select(SearchResult.FromPushshift)
-            .UnionBy(additionalResults, x => x.Url)
-            .ToList();
-
-        _logger.LogDebug("Found {count} most recent results for query '{query}'.", mostRecent.Count, query);
-        _logger.LogDebug("Found {count} highest score results for query '{query}'.", highestScore.Count, query);
-        _logger.LogDebug("Found {count} additional urls for query '{query}'.", additionalResults.Count, query);
-        _logger.LogDebug("After merging, a total of {count} results were found for query '{query}'.", results.Count, query);
-
-        return results;
     }
 }

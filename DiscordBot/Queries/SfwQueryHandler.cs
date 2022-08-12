@@ -13,13 +13,11 @@ namespace DiscordBot.Queries;
 public class SfwQueryHandler : QueryHandler
 {
     public SfwQueryHandler(
+        QueryMultiplexer queryMultiplexer,
         ResultsCache cache,
         ResultProber resultsProber,
-        IHttpClientFactory httpClientFactory,
-        ILogger<SfwQueryHandler> logger) : base(cache, resultsProber, httpClientFactory, logger) { }
+        ILogger<SfwQueryHandler> logger) : base(queryMultiplexer, cache, resultsProber, logger) { }
 
-    protected override PushshiftQuery BuildBaseQuery(string query) =>
-        new PushshiftQuery()
-            .Search(query)
-            .Sfw();
+    protected override PushshiftQuery ConfigureQuery(PushshiftQuery query)
+        => query.Sfw();
 }

@@ -26,6 +26,7 @@ internal static class CommandDependencies
             x.GetRequiredService<RepeatCommandHandler>(),
             x.GetRequiredService<DeleteCommandHandler>()
         })
+        .AddSingleton<QueryMultiplexer>()
         .AddSingleton<ResultProber>()
         .AddSingleton<NsfwQueryHandler>()
         .AddSingleton<SfwQueryHandler>()

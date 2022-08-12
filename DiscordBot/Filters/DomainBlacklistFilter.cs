@@ -3,7 +3,7 @@
 namespace DiscordBot.Filters;
 
 /// <summary>
-/// Filters out results that match a set of blacklisted domains.
+/// Determines if a url matches against a set of blacklisted domains.
 /// </summary>
 public static class DomainBlacklistFilter
 {

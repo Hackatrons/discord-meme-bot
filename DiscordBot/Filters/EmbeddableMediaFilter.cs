@@ -4,9 +4,9 @@ using DiscordBot.Text;
 namespace DiscordBot.Filters;
 
 /// <summary>
-/// Excludes non-embeddable media links from the result set.
+/// Determines if a search result is likely to be embeddable.
 /// Embeddable links are things such as videos, gifs, images, and audio.
-/// Other content such as HTML links will be excluded.
+/// Other content such as general HTML links will be excluded.
 /// The embeddable media detection method is not an exact science and may result in false positives and negatives.
 /// </summary>
 public static class EmbeddableMediaFilter
