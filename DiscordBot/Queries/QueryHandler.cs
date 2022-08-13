@@ -166,6 +166,12 @@ public abstract class QueryHandler
 
     bool ResultAllowed(SearchResult result)
     {
+        if (!KnownDeadUrlFilter.IsAllowed(result.FinalUrl))
+        {
+            _logger.LogDebug("Excluding result '{url}' as it's a known dead url.", result.FinalUrl);
+            return false;
+        }
+
         if (!RedditVideoDomainFilter.IsAllowed(result.FinalUrl))
         {
             _logger.LogDebug("Excluding result '{url}' as it's a reddit video that's not embeddable.", result.FinalUrl);
