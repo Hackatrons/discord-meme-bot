@@ -75,7 +75,7 @@ public class RepeatCommandHandler : IInitialise
             var message = await cachedMessage.GetOrDownloadAsync();
 
             // if it's not our message, ignore
-            if (message.Author.Id != _client.CurrentUser.Id)
+            if (message == null || message.Author.Id != _client.CurrentUser.Id)
                 return;
 
             _logger.LogWarning("Missing repeat command handler for message {id}", cachedMessage.Id);
