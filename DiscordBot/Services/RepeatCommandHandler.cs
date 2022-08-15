@@ -56,51 +56,57 @@ public class RepeatCommandHandler : IInitialise
         _client.ReactionAdded -= OnReactionAdded;
     }
 
-    async Task OnReactionAdded(
+    Task OnReactionAdded(
         Cacheable<IUserMessage, ulong> cachedMessage,
         Cacheable<IMessageChannel, ulong> cachedChannel,
         SocketReaction reaction)
     {
         // ignore own reactions
         if (reaction.UserId == _client.CurrentUser.Id)
-            return;
+            return Task.CompletedTask;
 
         if (!Emotes.Repeat.Name.Equals(reaction.Emote.Name))
-            return;
+            return Task.CompletedTask;
 
-        var repeatData = await _cache.Get<RepeatCommandData>(cachedMessage.Id.ToString());
-
-        if (repeatData == null)
+        // run in a background thread to avoid blocking the discord.net gateway task
+        Task.Run(async () =>
         {
-            var message = await cachedMessage.GetOrDownloadAsync();
+            var repeatData = await _cache.Get<RepeatCommandData>(cachedMessage.Id.ToString());
 
-            // if it's not our message, ignore
-            if (message == null || message.Author.Id != _client.CurrentUser.Id)
+            if (repeatData == null)
+            {
+                var message = await cachedMessage.GetOrDownloadAsync();
+
+                // if it's not our message, ignore
+                if (message == null || message.Author.Id != _client.CurrentUser.Id)
+                    return;
+
+                _logger.LogWarning("Missing repeat command handler for message {id}", cachedMessage.Id);
+
+                await message.ReplyAsync(embed: BotMessage.Error("Cannot repeat", "Sorry, unable to repeat command as I've lost the original query context."));
                 return;
+            }
 
-            _logger.LogWarning("Missing repeat command handler for message {id}", cachedMessage.Id);
+            var type = Type.GetType(repeatData.Type);
+            if (type == null)
+            {
+                _logger.LogError("Unable to find query handler type '{type}'", repeatData.Type);
+                return;
+            }
 
-            await message.ReplyAsync(embed: BotMessage.Error("Cannot repeat", "Sorry, unable to repeat command as I've lost the original query context."));
-            return;
-        }
+            if (!type.IsAssignableTo(typeof(QueryHandler)))
+            {
+                _logger.LogError("Type '{type}' is not a query handler type.", repeatData.Type);
+                return;
+            }
 
-        var type = Type.GetType(repeatData.Type);
-        if (type == null)
-        {
-            _logger.LogError("Unable to find query handler type '{type}'", repeatData.Type);
-            return;
-        }
+            var channel = await cachedChannel.GetOrDownloadAsync();
+            var queryHandler = (QueryHandler)_serviceProvider.GetRequiredService(type);
 
-        if (!type.IsAssignableTo(typeof(QueryHandler)))
-        {
-            _logger.LogError("Type '{type}' is not a query handler type.", repeatData.Type);
-            return;
-        }
+            await Repeat(repeatData.Query, queryHandler, channel);
+        }).Forget();
 
-        var channel = await cachedChannel.GetOrDownloadAsync();
-        var queryHandler = (QueryHandler)_serviceProvider.GetRequiredService(type);
-
-        await Repeat(repeatData.Query, queryHandler, channel);
+        return Task.CompletedTask;
     }
 
     async Task Repeat(string query, QueryHandler handler, IMessageChannel channel)
@@ -119,9 +125,8 @@ public class RepeatCommandHandler : IInitialise
 
         var message = await channel.SendMessageAsync(result.FinalUrl);
 
-        Emotes.AddResultReactions(message).Forget();
-
         await Task.WhenAll(
+            Emotes.AddResultReactions(message),
             Watch(message, handler, query),
             _deleteCommandHandler.Watch(message));
     }

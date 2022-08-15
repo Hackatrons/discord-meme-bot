@@ -4,6 +4,7 @@ using Discord.WebSocket;
 using DiscordBot.Configuration;
 using DiscordBot.Language;
 using DiscordBot.Messaging;
+using DiscordBot.Threading;
 using Microsoft.Extensions.Options;
 
 namespace DiscordBot.Services;
@@ -44,10 +45,15 @@ internal class CommandHandler : IInitialise
         _interactions.SlashCommandExecuted -= OnSlashCommandExecuted;
     }
 
-    static async Task OnSlashCommandExecuted(SlashCommandInfo command, IInteractionContext context, IResult result)
+    static Task OnSlashCommandExecuted(SlashCommandInfo command, IInteractionContext context, IResult result)
     {
-        if (!result.IsSuccess)
-            await RespondError(context, result);
+        Task.Run(async () =>
+        {
+            if (!result.IsSuccess)
+                await RespondError(context, result);
+        }).Forget();
+
+        return Task.CompletedTask;
     }
 
     static async Task RespondError(IInteractionContext context, IResult error)
@@ -80,12 +86,18 @@ internal class CommandHandler : IInitialise
 #endif
     }
 
-    async Task OnInteractionCreated(SocketInteraction arg)
+    Task OnInteractionCreated(SocketInteraction arg)
     {
-        var context = new SocketInteractionContext(_client, arg);
-        var result = await _interactions.ExecuteCommandAsync(context, _provider);
+        // run in a background thread to avoid blocking the discord.net gateway task
+        Task.Run(async () =>
+        {
+            var context = new SocketInteractionContext(_client, arg);
+            var result = await _interactions.ExecuteCommandAsync(context, _provider);
 
-        if (!result.IsSuccess)
-            await RespondError(context, result);
+            if (!result.IsSuccess)
+                await RespondError(context, result);
+        }).Forget();
+
+        return Task.CompletedTask;
     }
 }

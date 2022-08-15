@@ -44,11 +44,8 @@ public abstract class BaseSearchCommand : InteractionModuleBase<SocketInteractio
 
         var message = await FollowupAsync(result.FinalUrl);
 
-        // adding reactions is slow, and we don't want to wait for it
-        // so just fire it off in a background thread
-        Emotes.AddResultReactions(message).Forget();
-
         await Task.WhenAll(
+            Emotes.AddResultReactions(message),
             _repeatCommandHandler.Watch(message, _queryHandler, query),
             _deleteCommandHandler.Watch(message));
     }
