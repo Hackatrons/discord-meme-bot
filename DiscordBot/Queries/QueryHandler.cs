@@ -62,27 +62,8 @@ public abstract class QueryHandler
             // probe if we haven't already
             nextResult.Probe ??= await _resultProber.Probe(nextResult);
 
-            if (!ResultAllowed(nextResult))
+            if (!ResultAllowed(nextResult) || IsDuplicate(nextResult, consumed))
                 continue;
-
-            // check for duplicates based on the redirected url and etag
-            var previous = consumed.FirstOrDefault(x =>
-                string.Equals(x.FinalUrl, nextResult.FinalUrl, StringComparison.OrdinalIgnoreCase) ||
-                (x.Probe?.Etag != null && nextResult.Probe?.Etag != null && string.Equals(x.Probe.Etag, nextResult.Probe.Etag, StringComparison.OrdinalIgnoreCase)));
-
-            if (previous != null)
-            {
-                _logger.LogDebug(
-                    "Excluding result '{duplicateUrl}' as it's a duplicate of '{url}'." +
-                    "Previous result ETag : '{previousResultRedirectUrl}', " +
-                    "Duplicate result ETag : '{duplicateResultRedirectUrl}'.",
-                    nextResult.FinalUrl,
-                    previous.FinalUrl,
-                    previous.Probe?.Etag,
-                    nextResult.Probe?.Etag);
-
-                continue;
-            }
 
             // we have found a result to use
             foundResult = true;
@@ -191,6 +172,27 @@ public abstract class QueryHandler
 
             return false;
         }
+
+        return true;
+    }
+
+    bool IsDuplicate(SearchResult result, IEnumerable<SearchResult> previouslyConsumed)
+    {
+        // check for duplicates based on the redirected url and etag
+        var previous = previouslyConsumed.FirstOrDefault(x =>
+            string.Equals(x.FinalUrl, result.FinalUrl, StringComparison.OrdinalIgnoreCase) ||
+            (x.Probe?.Etag != null && result.Probe?.Etag != null && string.Equals(x.Probe.Etag, result.Probe.Etag, StringComparison.OrdinalIgnoreCase)));
+
+        if (previous == null) return false;
+
+        _logger.LogDebug(
+            "Excluding result '{duplicateUrl}' as it's a duplicate of '{url}'." +
+            "Previous result ETag : '{previousResultRedirectUrl}', " +
+            "Duplicate result ETag : '{duplicateResultRedirectUrl}'.",
+            result.FinalUrl,
+            previous.FinalUrl,
+            previous.Probe?.Etag,
+            result.Probe?.Etag);
 
         return true;
     }

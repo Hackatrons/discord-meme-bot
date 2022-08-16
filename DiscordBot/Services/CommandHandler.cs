@@ -5,7 +5,6 @@ using DiscordBot.Configuration;
 using DiscordBot.Language;
 using DiscordBot.Messaging;
 using DiscordBot.Threading;
-using Microsoft.Extensions.Options;
 
 namespace DiscordBot.Services;
 
@@ -23,12 +22,12 @@ internal class CommandHandler : IInitialise
         DiscordSocketClient client,
         InteractionService interactions,
         IServiceProvider serviceProvider,
-        IOptions<TestingSettings> testingSettings)
+        TestingSettings testingSettings)
     {
-        _testingSettings = testingSettings.Value;
         _client = client.ThrowIfNull();
         _interactions = interactions.ThrowIfNull();
         _provider = serviceProvider.ThrowIfNull();
+        _testingSettings = testingSettings.ThrowIfNull();
     }
 
     public void Initialise()
