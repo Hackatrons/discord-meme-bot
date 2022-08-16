@@ -21,7 +21,6 @@ internal static class Emotes
     /// </summary>
     public static async Task AddResultReactions(IUserMessage message)
     {
-        // adding reactions is very slow, so do this in a background task
         await message.AddReactionsAsync(ResultEmotes);
     }
 }

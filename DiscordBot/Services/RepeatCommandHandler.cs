@@ -111,8 +111,6 @@ public class RepeatCommandHandler : IInitialise
 
     async Task Repeat(string query, QueryHandler handler, IMessageChannel channel)
     {
-        // if this is a repeat command, then we'll get a cache hit
-        // so our response time should be within 3 seconds
         using var state = channel.EnterTypingState();
 
         // retrieve the next result (either from cache or executing the query)
