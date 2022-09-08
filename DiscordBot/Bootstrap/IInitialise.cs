@@ -1,4 +1,4 @@
-﻿namespace DiscordBot.Services;
+﻿namespace DiscordBot.Bootstrap;
 
 /// <summary>
 /// Represents a class that requires initialising and disposing.

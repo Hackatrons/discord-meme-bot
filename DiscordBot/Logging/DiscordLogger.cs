@@ -1,8 +1,8 @@
 ﻿using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
+using DiscordBot.Bootstrap;
 using DiscordBot.Language;
-using DiscordBot.Services;
 using Microsoft.Extensions.Logging;
 
 namespace DiscordBot.Logging;

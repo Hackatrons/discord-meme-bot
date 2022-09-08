@@ -2,7 +2,6 @@
 using DiscordBot.Filters;
 using DiscordBot.Logging;
 using DiscordBot.Queries;
-using DiscordBot.Services;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace DiscordBot.Bootstrap;

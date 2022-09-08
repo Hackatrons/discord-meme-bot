@@ -1,10 +1,10 @@
 ﻿using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
+using DiscordBot.Bootstrap;
 using DiscordBot.Commands;
 using DiscordBot.Configuration;
 using DiscordBot.Language;
-using DiscordBot.Services;
 using Microsoft.Extensions.Options;
 
 namespace DiscordBot;

@@ -1,12 +1,13 @@
 ﻿using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
+using DiscordBot.Bootstrap;
 using DiscordBot.Configuration;
 using DiscordBot.Language;
 using DiscordBot.Messaging;
 using DiscordBot.Threading;
 
-namespace DiscordBot.Services;
+namespace DiscordBot.Commands;
 
 /// <summary>
 /// Handler for executing commands.
