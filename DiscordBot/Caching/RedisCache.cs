@@ -17,7 +17,5 @@ public class RedisCache : ICache
 
     public async Task<string?> Get(string key) => await _cache.StringGetAsync(key);
 
-    public async Task<string?> GetAndPurge( string key) => await _cache.StringGetDeleteAsync(key);
-
     public async Task Set(string key, string value, TimeSpan? expiry = null) => await _cache.StringSetAsync(key, value, expiry);
 }

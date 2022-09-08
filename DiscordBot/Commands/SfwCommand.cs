@@ -1,6 +1,6 @@
 ﻿using Discord.Interactions;
+using DiscordBot.Caching;
 using DiscordBot.Queries;
-using DiscordBot.Services;
 using JetBrains.Annotations;
 
 namespace DiscordBot.Commands;
@@ -12,10 +12,9 @@ namespace DiscordBot.Commands;
 public class SfwCommand : BaseSearchCommand
 {
     public SfwCommand(
-        SfwQueryHandler queryHandler, 
-        RepeatCommandHandler repeatCommandHandler,
-        DeleteCommandHandler deleteCommandHandler)
-        : base(queryHandler, repeatCommandHandler, deleteCommandHandler) { }
+        SfwQueryHandler queryHandler,
+        ICache cache)
+        : base(queryHandler, cache) { }
 
     [UsedImplicitly]
     [SlashCommand("sfw", "Search for only sfw results.")]

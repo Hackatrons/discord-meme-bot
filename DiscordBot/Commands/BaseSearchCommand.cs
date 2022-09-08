@@ -1,10 +1,9 @@
 ﻿using Discord.Interactions;
+using Discord.WebSocket;
+using DiscordBot.Caching;
 using DiscordBot.Language;
 using DiscordBot.Messaging;
 using DiscordBot.Queries;
-using DiscordBot.Reactions;
-using DiscordBot.Services;
-using DiscordBot.Threading;
 
 namespace DiscordBot.Commands;
 
@@ -12,20 +11,15 @@ namespace DiscordBot.Commands;
 /// Base class for search related commands.
 /// Note: commands must be public classes for discord.net to use them
 /// </summary>
-public abstract class BaseSearchCommand : InteractionModuleBase<SocketInteractionContext>
+public abstract class BaseSearchCommand : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
 {
-    readonly RepeatCommandHandler _repeatCommandHandler;
-    readonly DeleteCommandHandler _deleteCommandHandler;
     readonly QueryHandler _queryHandler;
+    readonly ICache _cache;
 
-    protected BaseSearchCommand(
-        QueryHandler queryHandler,
-        RepeatCommandHandler repeatCommandHandler,
-        DeleteCommandHandler deleteCommandHandler)
+    protected BaseSearchCommand(QueryHandler queryHandler, ICache cache)
     {
         _queryHandler = queryHandler.ThrowIfNull();
-        _deleteCommandHandler = deleteCommandHandler.ThrowIfNull();
-        _repeatCommandHandler = repeatCommandHandler.ThrowIfNull();
+        _cache = cache.ThrowIfNull();
     }
 
     public async Task Search(string query)
@@ -42,11 +36,8 @@ public abstract class BaseSearchCommand : InteractionModuleBase<SocketInteractio
             return;
         }
 
-        var message = await FollowupAsync(result.FinalUrl);
+        var message = await FollowupAsync(result.FinalUrl, components: BotMessage.ResultButtons);
 
-        await Task.WhenAll(
-            Emotes.AddResultReactions(message),
-            _repeatCommandHandler.Watch(message, _queryHandler, query),
-            _deleteCommandHandler.Watch(message));
+        await RepeatCommand.Watch(message, _cache, _queryHandler, query);
     }
 }

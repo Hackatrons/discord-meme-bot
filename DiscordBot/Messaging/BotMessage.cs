@@ -8,6 +8,17 @@ namespace DiscordBot.Messaging;
 /// </summary>
 internal static class BotMessage
 {
+    public const string DeleteButtonId = "delete";
+    public const string RepeatButtonId = "repeat";
+
+    /// <summary>
+    /// The delete/repeat buttons to add with each result message.
+    /// </summary>
+    public static readonly MessageComponent ResultButtons = new ComponentBuilder()
+        .WithButton(label: "Delete", customId: DeleteButtonId, style: ButtonStyle.Danger)
+        .WithButton(label: "Repeat", customId: RepeatButtonId, style: ButtonStyle.Primary)
+        .Build();
+
     /// <summary>
     /// Returns an error message embed from the specified error details.
     /// </summary>

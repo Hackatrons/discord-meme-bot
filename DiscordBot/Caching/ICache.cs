@@ -22,20 +22,6 @@ public interface ICache
     }
 
     /// <summary>
-    /// Retrieves an item from the cache and purges it.
-    /// </summary>
-    Task<string?> GetAndPurge(string key);
-
-    /// <summary>
-    /// Retrieves a json item from the cache and purges it.
-    /// </summary>
-    async Task<T?> GetAndPurge<T>(string key)
-    {
-        var json = await GetAndPurge(key);
-        return json == null ? default : JsonSerializer.Deserialize<T>(json);
-    }
-
-    /// <summary>
     /// Sets an item in the cache.
     /// </summary>
     Task Set(string key, string value, TimeSpan? expiry = null);

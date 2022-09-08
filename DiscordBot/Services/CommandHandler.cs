@@ -90,7 +90,7 @@ internal class CommandHandler : IInitialise
         // run in a background thread to avoid blocking the discord.net gateway task
         Task.Run(async () =>
         {
-            var context = new SocketInteractionContext(_client, arg);
+            var context = CreateCommandContext(arg, _client);
             var result = await _interactions.ExecuteCommandAsync(context, _provider);
 
             if (!result.IsSuccess)
@@ -99,4 +99,12 @@ internal class CommandHandler : IInitialise
 
         return Task.CompletedTask;
     }
+
+    static IInteractionContext CreateCommandContext(SocketInteraction interaction, DiscordSocketClient client)
+        => interaction switch
+        {
+            SocketSlashCommand slash => new SocketInteractionContext<SocketSlashCommand>(client, slash),
+            SocketMessageComponent component => new SocketInteractionContext<SocketMessageComponent>(client, component),
+            _ => throw new NotImplementedException()
+        };
 }

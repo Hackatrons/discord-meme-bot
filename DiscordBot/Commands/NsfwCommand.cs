@@ -1,6 +1,6 @@
 ﻿using Discord.Interactions;
+using DiscordBot.Caching;
 using DiscordBot.Queries;
-using DiscordBot.Services;
 using JetBrains.Annotations;
 
 namespace DiscordBot.Commands;
@@ -12,10 +12,9 @@ namespace DiscordBot.Commands;
 public class NsfwCommand : BaseSearchCommand
 {
     public NsfwCommand(
-        NsfwQueryHandler queryHandler,  
-        RepeatCommandHandler repeatCommandHandler,
-        DeleteCommandHandler deleteCommandHandler)
-        : base(queryHandler, repeatCommandHandler, deleteCommandHandler) { }
+        NsfwQueryHandler queryHandler,
+        ICache cache)
+        : base(queryHandler, cache) { }
 
     [UsedImplicitly]
     [SlashCommand("nsfw", "Search for only nsfw results.")]
