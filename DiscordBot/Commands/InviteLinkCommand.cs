@@ -1,4 +1,5 @@
 ﻿using Discord.Interactions;
+using Discord.WebSocket;
 using DiscordBot.Configuration;
 using DiscordBot.Language;
 using JetBrains.Annotations;
@@ -9,7 +10,7 @@ namespace DiscordBot.Commands;
 /// A slash command that provides a discord invite link for this bot.
 /// </summary>
 [UsedImplicitly]
-public class InviteLinkCommand : InteractionModuleBase<SocketInteractionContext>
+public class InviteLinkCommand : InteractionModuleBase<SocketInteractionContext<SocketSlashCommand>>
 {
     readonly DiscordSettings _settings;
 
