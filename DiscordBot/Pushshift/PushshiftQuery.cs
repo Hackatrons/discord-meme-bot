@@ -196,11 +196,11 @@ public class PushshiftQuery
                 _ => throw new InvalidOperationException("invalid sort type specified")
             };
 
-            parameters.Add("sort_type", sortType);
+            parameters.Add("sort", sortType);
 
             if (_sortDirection.HasValue)
             {
-                parameters.Add("sort", _sortDirection == SortDirection.Ascending ? "asc" : "desc");
+                parameters.Add("order", _sortDirection == SortDirection.Ascending ? "asc" : "desc");
             }
         }
 
