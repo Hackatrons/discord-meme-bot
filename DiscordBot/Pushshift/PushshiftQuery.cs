@@ -14,7 +14,7 @@ namespace DiscordBot.Pushshift;
 public class PushshiftQuery
 {
     // https://github.com/pushshift/api
-    const string BaseUrl = "https://api.pushshift.io/reddit/search/submission/";
+    const string BaseUrl = "https://api.pushshift.io/reddit/search/submission";
 
     readonly List<string> _subreddits = new();
     readonly List<string> _fields = new();
