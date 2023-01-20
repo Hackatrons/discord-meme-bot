@@ -45,8 +45,13 @@ public abstract class QueryHandler
         var consumed = results.Where(x => x.Consumed).ToList();
         var remaining = new Stack<SearchResult>(results
             .Except(consumed)
-            // put pre-primed results at the top
-            .OrderBy(x => x.Probe != null));
+            // randomise the result set
+            .Shuffle()
+            // prioritise pre-primed results
+            // (note this is possible after randomisation because OrderBy is a stable sort)
+            .OrderBy(x => x.Probe != null)
+            // prioritise embeddables
+            .ThenBy(EmbeddableMediaFilter.ProbablyEmbeddableMedia));
 
         SearchResult? nextResult;
         var foundResult = false;
@@ -102,18 +107,10 @@ public abstract class QueryHandler
 
         _logger.LogInformation("{remaining}/{total} results remain after filtering for query '{query}'.", filtered.Count, unfiltered.Count, query);
 
-        results = filtered
-            // randomise the result set
-            .Shuffle()
-            // put the most likely embeddables at the top
-            // (note this is possible after randomisation because OrderBy is a stable sort)
-            .OrderBy(EmbeddableMediaFilter.ProbablyEmbeddableMedia)
-            .ToList();
-
         // store the results in the cache
-        await _cache.Set(channelId, _typeName, query, results);
+        await _cache.Set(channelId, _typeName, query, filtered);
 
-        return results;
+        return filtered;
     }
 
     async Task PrimeResults(IReadOnlyCollection<SearchResult> results, ulong channelId, string query)
@@ -171,7 +168,6 @@ public abstract class QueryHandler
             return false;
         }
 
-        // ReSharper disable once InvertIf
         if (result.Probe is { IsAlive: false })
         {
             _logger.LogDebug(
@@ -181,6 +177,15 @@ public abstract class QueryHandler
                 result.FinalUrl,
                 result.Probe.HttpStatusCode?.ToString() ?? "(none)",
                 result.Probe.Error ?? "(none)");
+
+            return false;
+        }
+
+        // ReSharper disable once InvertIf
+        if (result.Probe?.ContentType != null && !EmbeddableMediaFilter.ProbablyEmbeddableMedia(result))
+        {
+            // if we've probed the url and it's still not embeddable, don't allow it
+            _logger.LogDebug("Excluding result '{url}' as the url probe determined the url is not embeddable media.", result.FinalUrl);
 
             return false;
         }

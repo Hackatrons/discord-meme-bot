@@ -31,4 +31,9 @@ public record ProbeResult
     /// The etag of the search result (if any).
     /// </summary>
     public string? Etag { get; init; }
+
+    /// <summary>
+    /// The HTTP response content type of the search result (if any).
+    /// </summary>
+    public string? ContentType { get; init; }
 }

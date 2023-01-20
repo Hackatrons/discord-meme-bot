@@ -31,16 +31,28 @@ public static class EmbeddableMediaFilter
         "video"
     };
 
-    public static bool ProbablyEmbeddableMedia(SearchResult result) =>
-        result.MediaHint is MediaType.Video or MediaType.Audio or MediaType.Audio ||
-        ProbablyEmbeddableMedia(result.FinalUrl ?? throw new InvalidOperationException("result url cannot be null"));
+    /// <summary>
+    /// Checks the url, filename, and probe content-type result to determine if the search result is embeddable.
+    /// </summary>
+    public static bool ProbablyEmbeddableMedia(SearchResult result)
+    {
+        _ = result.FinalUrl ?? throw new InvalidOperationException("result url cannot be null");
 
-    static bool ProbablyEmbeddableMedia(string url) =>
-        IsMediaFile(url) ||
-        MediaHostingDomains.Any(url.ContainsIgnoreCase);
+        // trust it's embeddable if specified by the api
+        if (result.MediaHint is MediaType.Video or MediaType.Audio or MediaType.Image)
+            return true;
 
-    static bool IsMediaFile(string url) =>
-        Uri.TryCreate(url, UriKind.Absolute, out var uri) &&
-        MimeTypes.TryGetMimeType(uri.LocalPath, out var mimeType) &&
-        EmbeddableMimeTypes.Any(mimeType.ContainsIgnoreCase);
+        // trust it's embeddable if it's from a known media site
+        if (MediaHostingDomains.Any(result.FinalUrl.ContainsIgnoreCase))
+            return true;
+
+        // if it has a filename in the url like something.png that maps to a media content type, we'll trust that it's embeddable
+        if (Uri.TryCreate(result.FinalUrl, UriKind.Absolute, out var uri) &&
+            MimeTypes.TryGetMimeType(uri.LocalPath, out var mimeType) &&
+            EmbeddableMimeTypes.Any(mimeType.ContainsIgnoreCase))
+            return true;
+
+        // check the content-type specified by the http response
+        return result.Probe?.ContentType != null && EmbeddableMimeTypes.Any(result.Probe.ContentType.ContainsIgnoreCase);
+    }
 }

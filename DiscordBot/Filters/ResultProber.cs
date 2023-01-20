@@ -42,7 +42,8 @@ public class ResultProber
                 // some services like reddit and imgur will give us an etag back
                 // where the picture/content itself may have a different url, but the etag may be the identical (e.g. think file hash)
                 Etag = response.Headers.ETag?.Tag,
-                HttpStatusCode = response.StatusCode
+                HttpStatusCode = response.StatusCode,
+                ContentType = response.Content.Headers.ContentType?.MediaType
             };
         }
         catch (HttpRequestException ex)
