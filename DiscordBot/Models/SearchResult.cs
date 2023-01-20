@@ -34,11 +34,23 @@ public record SearchResult
     public ProbeResult? Probe { get; set; }
 
     /// <summary>
+    /// Whether or not the url points to a reddit gallery (www.reddit.com/gallery/abc).
+    /// </summary>
+    public bool? IsGallery { get; init; }
+
+    /// <summary>
+    /// Whether or not the url points to a reddit text post.
+    /// </summary>
+    public bool? IsSelf { get; init; }
+
+    /// <summary>
     /// Constructs a search result from the given pushshift search result.
     /// </summary>
     public static SearchResult FromPushshift(PushshiftResult result) => new()
     {
         Url = result.Url!.ThrowIfNullOrWhitespace(),
+        IsGallery = result.IsGallery,
+        IsSelf = result.IsSelf,
         MediaHint = result.PostHint switch
         {
             PostHint.Image => MediaType.Image,

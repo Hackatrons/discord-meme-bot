@@ -123,14 +123,14 @@ public abstract class QueryHandler
         // prime the next X results
         const int numberResultsToPrime = 5;
 
-        var primedResultsCount = results.Count(x => !x.Consumed && x.Probe != null);
+        var primedResultsCount = results.Count(x => x is { Consumed: false, Probe: { } });
         if (primedResultsCount >= minPrimedResults)
             return;
 
         // probe the next couple of results ahead of time
         // to reduce the time it takes to return a result
         var resultsToPrime = results
-            .Where(x => !x.Consumed && x.Probe == null)
+            .Where(x => x is { Consumed: false, Probe: null })
             .Take(numberResultsToPrime);
 
         await Task.WhenAll(resultsToPrime
@@ -156,6 +156,18 @@ public abstract class QueryHandler
         if (!RedditVideoDomainFilter.IsAllowed(result.FinalUrl))
         {
             _logger.LogDebug("Excluding result '{url}' as it's a reddit video that's not embeddable.", result.FinalUrl);
+            return false;
+        }
+
+        if (!RedditGalleryFilter.IsAllowed(result))
+        {
+            _logger.LogDebug("Excluding result '{url}' as it's a reddit gallery that's not embeddable.", result.FinalUrl);
+            return false;
+        }
+
+        if (!RedditSelfPostFilter.IsAllowed(result))
+        {
+            _logger.LogDebug("Excluding result '{url}' as it's a reddit self post that's not embeddable.", result.FinalUrl);
             return false;
         }
 
