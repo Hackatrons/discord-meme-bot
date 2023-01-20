@@ -206,7 +206,7 @@ public class PushshiftQuery
 
         if (_limit.HasValue) parameters.Add("size", _limit.Value.ToString());
 
-        if (_fields.Any()) parameters.Add("fields", string.Join(",", _fields));
+        if (_fields.Any()) parameters.Add("filter", string.Join(",", _fields));
 
         builder.Query = string.Join("&", parameters.AllKeys.Select(x => x + "=" + parameters[x]));
 

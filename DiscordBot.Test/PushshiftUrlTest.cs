@@ -9,7 +9,7 @@ public class PushshiftUrlTest
     [TestMethod]
     public void QueryReturnsCorrectUrl()
     {
-        Assert.AreEqual("https://api.pushshift.io/reddit/search/submission/?q=asdf",
+        Assert.AreEqual("https://api.pushshift.io/reddit/search/submission?q=asdf",
             new PushshiftQuery()
                 .Search("asdf")
                 .ToString());
@@ -18,7 +18,7 @@ public class PushshiftUrlTest
     [TestMethod]
     public void TitleQueryReturnsCorrectUrl()
     {
-        Assert.AreEqual("https://api.pushshift.io/reddit/search/submission/?title=asdf",
+        Assert.AreEqual("https://api.pushshift.io/reddit/search/submission?title=asdf",
             new PushshiftQuery()
                 .SearchTitle("asdf")
                 .ToString());
@@ -27,7 +27,7 @@ public class PushshiftUrlTest
     [TestMethod]
     public void QueryWithLimitReturnsCorrectUrl()
     {
-        Assert.AreEqual("https://api.pushshift.io/reddit/search/submission/?q=asdf&size=100",
+        Assert.AreEqual("https://api.pushshift.io/reddit/search/submission?q=asdf&size=100",
             new PushshiftQuery()
                 .Search("asdf")
                 .Limit(100)
@@ -37,19 +37,19 @@ public class PushshiftUrlTest
     [TestMethod]
     public void QueryWithScoreSortReturnsCorrectUrl()
     {
-        Assert.AreEqual("https://api.pushshift.io/reddit/search/submission/?q=asdf&sort=score",
+        Assert.AreEqual("https://api.pushshift.io/reddit/search/submission?q=asdf&sort=score",
             new PushshiftQuery()
                 .Search("asdf")
                 .Sort(SortType.Score)
                 .ToString());
 
-        Assert.AreEqual("https://api.pushshift.io/reddit/search/submission/?q=asdf&sort=score&order=asc",
+        Assert.AreEqual("https://api.pushshift.io/reddit/search/submission?q=asdf&sort=score&order=asc",
             new PushshiftQuery()
                 .Search("asdf")
                 .Sort(SortType.Score, SortDirection.Ascending)
                 .ToString());
 
-        Assert.AreEqual("https://api.pushshift.io/reddit/search/submission/?q=asdf&sort=score&order=desc",
+        Assert.AreEqual("https://api.pushshift.io/reddit/search/submission?q=asdf&sort=score&order=desc",
             new PushshiftQuery()
                 .Search("asdf")
                 .Sort(SortType.Score, SortDirection.Descending)
@@ -59,19 +59,19 @@ public class PushshiftUrlTest
     [TestMethod]
     public void QueryWithCreatedSortReturnsCorrectUrl()
     {
-        Assert.AreEqual("https://api.pushshift.io/reddit/search/submission/?q=asdf&sort=created_utc",
+        Assert.AreEqual("https://api.pushshift.io/reddit/search/submission?q=asdf&sort=created_utc",
             new PushshiftQuery()
                 .Search("asdf")
                 .Sort(SortType.CreatedDate)
                 .ToString());
 
-        Assert.AreEqual("https://api.pushshift.io/reddit/search/submission/?q=asdf&sort=created_utc&order=asc",
+        Assert.AreEqual("https://api.pushshift.io/reddit/search/submission?q=asdf&sort=created_utc&order=asc",
             new PushshiftQuery()
                 .Search("asdf")
                 .Sort(SortType.CreatedDate, SortDirection.Ascending)
                 .ToString());
 
-        Assert.AreEqual("https://api.pushshift.io/reddit/search/submission/?q=asdf&sort=created_utc&order=desc",
+        Assert.AreEqual("https://api.pushshift.io/reddit/search/submission?q=asdf&sort=created_utc&order=desc",
             new PushshiftQuery()
                 .Search("asdf")
                 .Sort(SortType.CreatedDate, SortDirection.Descending)
@@ -81,19 +81,19 @@ public class PushshiftUrlTest
     [TestMethod]
     public void QueryWithCommentsSortReturnsCorrectUrl()
     {
-        Assert.AreEqual("https://api.pushshift.io/reddit/search/submission/?q=asdf&sort=num_comments",
+        Assert.AreEqual("https://api.pushshift.io/reddit/search/submission?q=asdf&sort=num_comments",
             new PushshiftQuery()
                 .Search("asdf")
                 .Sort(SortType.NumberOfComments)
                 .ToString());
 
-        Assert.AreEqual("https://api.pushshift.io/reddit/search/submission/?q=asdf&sort=num_comments&order=asc",
+        Assert.AreEqual("https://api.pushshift.io/reddit/search/submission?q=asdf&sort=num_comments&order=asc",
             new PushshiftQuery()
                 .Search("asdf")
                 .Sort(SortType.NumberOfComments, SortDirection.Ascending)
                 .ToString());
 
-        Assert.AreEqual("https://api.pushshift.io/reddit/search/submission/?q=asdf&sort=num_comments&order=desc",
+        Assert.AreEqual("https://api.pushshift.io/reddit/search/submission?q=asdf&sort=num_comments&order=desc",
             new PushshiftQuery()
                 .Search("asdf")
                 .Sort(SortType.NumberOfComments, SortDirection.Descending)
@@ -103,7 +103,7 @@ public class PushshiftUrlTest
     [TestMethod]
     public void QueryWithSubredditsReturnsCorrectUrl()
     {
-        Assert.AreEqual("https://api.pushshift.io/reddit/search/submission/?q=asdf&subreddit=sr1,sr2&size=100",
+        Assert.AreEqual("https://api.pushshift.io/reddit/search/submission?q=asdf&subreddit=sr1,sr2&size=100",
             new PushshiftQuery()
                 .Search("asdf")
                 .Subreddits("sr1", "sr2")
@@ -114,7 +114,7 @@ public class PushshiftUrlTest
     [TestMethod]
     public void QueryWithOnlyNsfwReturnsCorrectUrl()
     {
-        Assert.AreEqual("https://api.pushshift.io/reddit/search/submission/?q=asdf&subreddit=sr1,sr2&over_18=true&size=100",
+        Assert.AreEqual("https://api.pushshift.io/reddit/search/submission?q=asdf&subreddit=sr1,sr2&over_18=true&size=100",
             new PushshiftQuery()
                 .Search("asdf")
                 .Subreddits("sr1", "sr2")
@@ -126,7 +126,7 @@ public class PushshiftUrlTest
     [TestMethod]
     public void QueryWithOnlySfwReturnsCorrectUrl()
     {
-        Assert.AreEqual("https://api.pushshift.io/reddit/search/submission/?q=asdf&subreddit=sr&over_18=false&size=100",
+        Assert.AreEqual("https://api.pushshift.io/reddit/search/submission?q=asdf&subreddit=sr&over_18=false&size=100",
             new PushshiftQuery()
                 .Search("asdf")
                 .Subreddits("sr")
@@ -138,7 +138,7 @@ public class PushshiftUrlTest
     [TestMethod]
     public void QueryWithSortReturnsCorrectUrl()
     {
-        Assert.AreEqual("https://api.pushshift.io/reddit/search/submission/?q=asdf&subreddit=sr&sort=score&size=100",
+        Assert.AreEqual("https://api.pushshift.io/reddit/search/submission?q=asdf&subreddit=sr&sort=score&size=100",
             new PushshiftQuery()
                 .Search("asdf")
                 .Subreddits("sr")
@@ -150,7 +150,7 @@ public class PushshiftUrlTest
     [TestMethod]
     public void NoQueryReturnsCorrectUrl()
     {
-        Assert.AreEqual("https://api.pushshift.io/reddit/search/submission/?subreddit=sr&sort=score&size=100",
+        Assert.AreEqual("https://api.pushshift.io/reddit/search/submission?subreddit=sr&sort=score&size=100",
             new PushshiftQuery()
                 .Subreddits("sr")
                 .Sort(SortType.Score)
@@ -161,7 +161,7 @@ public class PushshiftUrlTest
     [TestMethod]
     public void ScoreGreaterThanReturnsCorrectUrl()
     {
-        Assert.AreEqual("https://api.pushshift.io/reddit/search/submission/?subreddit=sr&score=>100&sort=score&size=100",
+        Assert.AreEqual("https://api.pushshift.io/reddit/search/submission?subreddit=sr&score=>100&sort=score&size=100",
             new PushshiftQuery()
                 .Subreddits("sr")
                 .FilterScore(100, ScoreFilterType.GreaterThan)
@@ -173,7 +173,7 @@ public class PushshiftUrlTest
     [TestMethod]
     public void ScoreGreaterThanOrEqualToReturnsCorrectUrl()
     {
-        Assert.AreEqual("https://api.pushshift.io/reddit/search/submission/?subreddit=sr&score=>%3D100&sort=score&size=100",
+        Assert.AreEqual("https://api.pushshift.io/reddit/search/submission?subreddit=sr&score=>%3D100&sort=score&size=100",
             new PushshiftQuery()
                 .Subreddits("sr")
                 .FilterScore(100, ScoreFilterType.GreaterThanOrEqualTo)
@@ -185,7 +185,7 @@ public class PushshiftUrlTest
     [TestMethod]
     public void ScoreLessThanReturnsCorrectUrl()
     {
-        Assert.AreEqual("https://api.pushshift.io/reddit/search/submission/?subreddit=sr&score=<100&sort=score&size=100",
+        Assert.AreEqual("https://api.pushshift.io/reddit/search/submission?subreddit=sr&score=<100&sort=score&size=100",
             new PushshiftQuery()
                 .Subreddits("sr")
                 .FilterScore(100, ScoreFilterType.LessThan)
@@ -197,7 +197,7 @@ public class PushshiftUrlTest
     [TestMethod]
     public void ScoreLessThanOrEqualToReturnsCorrectUrl()
     {
-        Assert.AreEqual("https://api.pushshift.io/reddit/search/submission/?subreddit=sr&score=<%3D100&sort=score&size=100",
+        Assert.AreEqual("https://api.pushshift.io/reddit/search/submission?subreddit=sr&score=<%3D100&sort=score&size=100",
             new PushshiftQuery()
                 .Subreddits("sr")
                 .FilterScore(100, ScoreFilterType.LessThanOrEqualTo)
@@ -207,9 +207,9 @@ public class PushshiftUrlTest
     }
 
     [TestMethod]
-    public void QueryWithFieldsReturnsCorrectUrl()
+    public void QueryWithfilterReturnsCorrectUrl()
     {
-        Assert.AreEqual("https://api.pushshift.io/reddit/search/submission/?q=asdf&fields=a,b",
+        Assert.AreEqual("https://api.pushshift.io/reddit/search/submission?q=asdf&filter=a,b",
             new PushshiftQuery()
                 .Search("asdf")
                 .Fields(new[] { "a", "b" })
@@ -219,7 +219,7 @@ public class PushshiftUrlTest
     [TestMethod]
     public void QueryWithPostHintsReturnsCorrectUrl()
     {
-        Assert.AreEqual("https://api.pushshift.io/reddit/search/submission/?q=asdf&post_hint=a|b:c|d",
+        Assert.AreEqual("https://api.pushshift.io/reddit/search/submission?q=asdf&post_hint=a|b:c|d",
             new PushshiftQuery()
                 .Search("asdf")
                 .PostHints("a", "b:c", "d")
